@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Search, Loader2, CheckCircle2, Clock, Send, Package, RefreshCw, Download, Banknote, Star, Share2 } from 'lucide-react';
-import { submitRating } from '@/app/actions';
 import { motion, AnimatePresence } from 'framer-motion';
 
 function useCountdown(deadline: string | null) {
@@ -170,8 +169,14 @@ export default function OrderStatus() {
   const handleRating = async (stars: number) => {
     if (!order || ratingDone) return;
     setRating(stars);
-    const res = await submitRating(order.id, stars, ratingComment, order.cliente_nombre, order.servicio_id);
-    if (res.success) setRatingDone(true);
+    const { error } = await supabase.from('calificaciones').insert([{
+      pedido_id: order.id,
+      rating: stars,
+      comment: ratingComment,
+      cliente_nombre: order.cliente_nombre,
+      servicio_id: order.servicio_id,
+    }]);
+    if (!error) setRatingDone(true);
   };
 
   return (
