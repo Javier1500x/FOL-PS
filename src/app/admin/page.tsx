@@ -37,6 +37,17 @@ const STATUS_COLOR: Record<string, string> = {
   entregado: 'bg-green-100 text-green-700 border border-green-400',
 };
 
+const AVATAR_COLORS = ['#3b82f6','#8b5cf6','#ec4899','#f59e0b','#10b981','#ef4444','#06b6d4','#f97316'];
+function Avatar({ name }: { name: string }) {
+  const initials = name.trim().split(' ').slice(0, 2).map(w => w[0]?.toUpperCase() || '').join('');
+  const color = AVATAR_COLORS[name.charCodeAt(0) % AVATAR_COLORS.length];
+  return (
+    <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-black text-sm shrink-0" style={{ background: color }}>
+      {initials}
+    </div>
+  );
+}
+
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('orders');
   const [currentUser, setCurrentUser] = useState('');
@@ -316,7 +327,7 @@ export default function AdminDashboard() {
                 <tbody className="divide-y divide-slate-100">
                   {filteredOrders.map((o) => (
                     <tr key={o.id} className="hover:bg-blue-50/40 transition-all">
-                      <td className="px-8 py-8"><div className="font-black text-xl tracking-tighter uppercase">{o.cliente_nombre}</div><div className="text-[10px] font-bold text-blue-500">{o.servicio_id}</div><div className="text-[10px] font-bold mt-1 text-slate-400 uppercase">{o.metodo_pago === 'deposito_lafise' ? 'Depósito LAFISE' : 'Efectivo'}{o.deadline && (Date.now() > new Date(o.deadline + 'T23:59:59').getTime() - 86400000) && o.estado !== 'entregado' && <span className="ml-2 bg-red-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase animate-pulse">⚠ URGENTE</span>}</div></td>
+                      <td className="px-8 py-8"><div className="flex items-center gap-3"><Avatar name={o.cliente_nombre} /><div><div className="font-black text-xl tracking-tighter uppercase">{o.cliente_nombre}</div><div className="text-[10px] font-bold text-blue-500">{o.servicio_id}</div><div className="text-[10px] font-bold mt-1 text-slate-400 uppercase">{o.metodo_pago === 'deposito_lafise' ? 'Depósito LAFISE' : 'Efectivo'}{o.deadline && (Date.now() > new Date(o.deadline + 'T23:59:59').getTime() - 86400000) && o.estado !== 'entregado' && <span className="ml-2 bg-red-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase animate-pulse">⚠ URGENTE</span>}</div></div></div></td>
                       <td className="px-8 py-8">
                         <div className="flex gap-2">
                           <button onClick={() => contactWhatsApp(o)} className="p-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-600 hover:text-white transition-all"><MessageCircle size={18} /></button>
@@ -421,7 +432,7 @@ export default function AdminDashboard() {
       {editingOrder && (
         <div className="fixed inset-0 z-[600] flex items-center justify-center p-6 bg-slate-900/80 backdrop-blur-xl">
           <div className="bg-white w-full max-w-3xl rounded-[3rem] shadow-2xl overflow-hidden flex flex-col md:flex-row">
-            <div className="md:w-72 bg-slate-50 p-10 border-r border-slate-100"><h3 className="text-2xl font-black uppercase italic mb-8 tracking-tighter">Expediente</h3><div className="space-y-6"><div><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Cliente</label><p className="text-xl font-black uppercase">{editingOrder.cliente_nombre}</p></div><div className="bg-white p-5 rounded-2xl border border-slate-100"><p className="text-xs font-bold text-slate-500 italic">&quot;{editingOrder.detalles}&quot;</p></div></div></div>
+            <div className="md:w-72 bg-slate-50 p-10 border-r border-slate-100"><h3 className="text-2xl font-black uppercase italic mb-8 tracking-tighter">Expediente</h3><div className="space-y-6"><div className="flex items-center gap-4"><Avatar name={editingOrder.cliente_nombre} /><div><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Cliente</label><p className="text-xl font-black uppercase">{editingOrder.cliente_nombre}</p></div></div><div className="bg-white p-5 rounded-2xl border border-slate-100"><p className="text-xs font-bold text-slate-500 italic">&quot;{editingOrder.detalles}&quot;</p></div></div></div>
             <div className="flex-1 p-12"><div className="flex justify-between items-center mb-10"><h3 className="text-3xl font-black uppercase underline decoration-blue-600 decoration-4 underline-offset-8">Ajustes</h3><button onClick={() => setEditingOrder(null)}><X /></button></div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
                 <div><label className="text-xs font-black uppercase tracking-widest mb-2 block">Monto (C$)</label><input type="number" className="w-full px-6 py-4 rounded-2xl bg-slate-50 font-black text-3xl" value={editingOrder.monto_total || 0} onChange={(e) => setEditingOrder({ ...editingOrder, monto_total: e.target.value })} /></div>

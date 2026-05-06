@@ -263,16 +263,20 @@ export default function OrderStatus() {
 
                 <div className="relative z-10">
                   <div className="flex justify-between items-start mb-8">
-                    <div>
-                      <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">Estado del Producto</p>
-                      <motion.h3
-                        key={order.estado}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="text-3xl font-black tracking-tight uppercase"
-                      >
-                        {getStatusLabel(order.estado)}
-                      </motion.h3>
+                    <div className="flex items-center gap-4">
+                      {(() => {
+                        const name = order.cliente_nombre || '';
+                        const initials = name.trim().split(' ').slice(0,2).map((w: string) => w[0]?.toUpperCase()||'').join('');
+                        const colors = ['#3b82f6','#8b5cf6','#ec4899','#f59e0b','#10b981','#ef4444','#06b6d4','#f97316'];
+                        const bg = colors[name.charCodeAt(0) % colors.length];
+                        return <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-black text-sm shrink-0" style={{ background: bg }}>{initials}</div>;
+                      })()}
+                      <div>
+                        <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">Estado del Producto</p>
+                        <motion.h3 key={order.estado} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="text-3xl font-black tracking-tight uppercase">
+                          {getStatusLabel(order.estado)}
+                        </motion.h3>
+                      </div>
                     </div>
                     <motion.div
                       animate={{ scale: [1, 1.2, 1], opacity: [1, 0.7, 1] }}
