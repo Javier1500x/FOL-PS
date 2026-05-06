@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Search, Loader2, CheckCircle2, Clock, Send, Package, RefreshCw } from 'lucide-react';
+import { Search, Loader2, CheckCircle2, Clock, Send, Package, RefreshCw, Download, Banknote } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const STATUS_STEPS = [
@@ -299,6 +299,59 @@ export default function OrderStatus() {
                   </div>
                 </div>
               </div>
+
+              {/* Datos de depósito */}
+              {order.metodo_pago === 'deposito_lafise' && order.monto_total > 0 && !order.archivo_entrega && (
+                <motion.div
+                  key="deposito"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-6 bg-blue-600 p-8 rounded-[2rem] shadow-2xl"
+                >
+                  <div className="flex items-center gap-3 mb-4">
+                    <Banknote className="w-8 h-8 text-white shrink-0" />
+                    <p className="text-xl font-black text-white tracking-tighter">Realiza tu depósito para recibir tu entrega</p>
+                  </div>
+                  <div className="bg-white/10 rounded-2xl p-5 text-white space-y-1 mb-4">
+                    <p className="text-sm font-bold">Banco: <span className="font-black">LAFISE</span></p>
+                    <p className="text-sm font-bold">Cuenta Córdobas: <span className="font-black text-lg">137038005</span></p>
+                    <p className="text-sm font-bold">A nombre de: <span className="font-black">Leandro Calero</span></p>
+                    <p className="text-sm font-bold">Monto: <span className="font-black text-lg">C${order.monto_total}</span></p>
+                  </div>
+                  <a
+                    href={`https://wa.me/50585853867?text=${encodeURIComponent(`Hola FOL PS! Soy ${order.cliente_nombre}, acabo de realizar el depósito de C$${order.monto_total} por mi pedido (ID: ${order.id}). Adjunto el comprobante.`)}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-full flex items-center justify-center gap-2 bg-white text-blue-700 py-4 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-slate-900 hover:text-white transition-all"
+                  >
+                    <Send className="w-4 h-4" /> Enviar comprobante por WhatsApp
+                  </a>
+                </motion.div>
+              )}
+
+              {/* Archivo de entrega */}
+              {order.archivo_entrega && (
+                <motion.div
+                  key={order.archivo_entrega}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-6 bg-green-600 p-8 rounded-[2rem] shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-4"
+                >
+                  <div className="text-white">
+                    <p className="text-[10px] font-black uppercase tracking-[0.4em] mb-1 opacity-70">Archivo Disponible</p>
+                    <p className="text-xl font-black tracking-tighter">Tu entrega está lista para descargar</p>
+                  </div>
+                  <a
+                    href={order.archivo_entrega}
+                    target="_blank"
+                    rel="noreferrer"
+                    download
+                    className="shrink-0 bg-white text-green-700 px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-xs flex items-center gap-2 hover:bg-slate-900 hover:text-white transition-all shadow-xl"
+                  >
+                    <Download className="w-5 h-5" /> Descargar
+                  </a>
+                </motion.div>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
