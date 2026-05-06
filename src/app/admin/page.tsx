@@ -172,7 +172,7 @@ export default function AdminDashboard() {
   const contactWhatsApp = (order: any) => {
     const phone = order.cliente_contacto.replace(/\D/g, '');
     const msg = encodeURIComponent(`Hola ${order.cliente_nombre}, te contactamos de FOL PS sobre tu pedido de ${order.servicio_id}.`);
-    window.open(`https://wa.me/${phone || '50585853864'}?text=${msg}`, '_blank');
+    window.open(`https://wa.me/${phone || '50585853867'}?text=${msg}`, '_blank');
   };
 
   const contactEmail = (order: any) => {

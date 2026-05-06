@@ -117,7 +117,7 @@ export default function TrackOrderPage() {
               <Info className="w-12 h-12 text-blue-500 mb-8" />
               <h4 className="text-3xl font-black tracking-tighter mb-4 uppercase italic">Nota del Equipo</h4>
               <p className="text-slate-400 font-bold text-lg leading-loose mb-10">{steps[getCurrentStepIndex()]?.desc}</p>
-              <button onClick={() => window.open('https://wa.me/50585853864', '_blank')} className="bg-white text-slate-900 py-6 rounded-3xl font-black uppercase tracking-widest text-xs hover:bg-blue-600 hover:text-white transition-all shadow-xl">Contactar Staff <Send className="ml-2 w-4 h-4 inline" /></button>
+              <button onClick={() => window.open('https://wa.me/50585853867', '_blank')} className="bg-white text-slate-900 py-6 rounded-3xl font-black uppercase tracking-widest text-xs hover:bg-blue-600 hover:text-white transition-all shadow-xl">Contactar Staff <Send className="ml-2 w-4 h-4 inline" /></button>
            </div>
            <div className="bg-white p-12 rounded-[3.5rem] shadow-2xl border border-slate-100 flex flex-col items-center text-center justify-center">
               <div className={`w-24 h-24 rounded-full flex items-center justify-center mb-8 ${order.estado === 'entregado' ? 'bg-green-100 text-green-600 animate-bounce' : 'bg-slate-50 text-slate-200'}`}><CheckCircle2 className="w-12 h-12" /></div>
