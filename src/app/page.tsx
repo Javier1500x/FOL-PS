@@ -3,9 +3,13 @@ import Hero from '@/components/Hero';
 import Services from '@/components/Services';
 import OrderStatus from '@/components/OrderStatus';
 import ContactForm from '@/components/ContactForm';
-import { Users, ShieldCheck, Zap, Cpu } from 'lucide-react';
+import { ShieldCheck, Zap, Cpu } from 'lucide-react';
+import { fetchReviews, fetchCompletedCount } from '@/app/actions';
 
-export default function Home() {
+export default async function Home() {
+  const [reviewsRes, countRes] = await Promise.all([fetchReviews(), fetchCompletedCount()]);
+  const reviews = reviewsRes.data || [];
+  const completedCount = countRes.count || 0;
   return (
     <main className="min-h-screen">
       <Navbar />
@@ -63,6 +67,12 @@ export default function Home() {
                 <p className="text-4xl md:text-6xl font-black text-white mb-1 tracking-tighter">UNI</p>
                 <p className="text-slate-500 uppercase tracking-widest text-[10px] font-black">Formación</p>
               </div>
+              {completedCount > 0 && (
+                <div className="text-center md:text-left">
+                  <p className="text-4xl md:text-6xl font-black text-blue-400 mb-1 tracking-tighter">{completedCount}+</p>
+                  <p className="text-slate-500 uppercase tracking-widest text-[10px] font-black">Entregas</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -70,6 +80,30 @@ export default function Home() {
       </section>
 
       <ContactForm />
+
+      {/* Reseñas */}
+      {reviews.length > 0 && (
+        <section className="py-20 bg-slate-50 border-t border-slate-100">
+          <div className="container mx-auto px-6 max-w-5xl">
+            <div className="text-center mb-12">
+              <p className="text-[10px] font-black text-blue-600 uppercase tracking-[0.4em] mb-3">Lo que dicen nuestros clientes</p>
+              <h2 className="text-4xl font-black text-slate-900 tracking-tighter">Reseñas Reales</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {reviews.map((r: any) => (
+                <div key={r.id} className="bg-white p-8 rounded-[2rem] shadow-xl border border-slate-100">
+                  <div className="flex gap-1 mb-4">
+                    {[1,2,3,4,5].map(s => <span key={s} className={s <= r.rating ? 'text-yellow-400' : 'text-slate-200'}>★</span>)}
+                  </div>
+                  {r.comment && <p className="text-slate-600 font-medium italic mb-4 text-sm leading-relaxed">&quot;{r.comment}&quot;</p>}
+                  <p className="font-black text-slate-900 uppercase text-xs tracking-widest">{r.cliente_nombre}</p>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase">{r.servicio_id}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       <footer className="py-12 bg-white border-t border-slate-100">
         <div className="container mx-auto px-6 text-center">

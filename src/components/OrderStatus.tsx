@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Search, Loader2, CheckCircle2, Clock, Send, Package, RefreshCw, Download, Banknote } from 'lucide-react';
+import { Search, Loader2, CheckCircle2, Clock, Send, Package, RefreshCw, Download, Banknote, Star } from 'lucide-react';
+import { submitRating } from '@/app/actions';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const STATUS_STEPS = [
@@ -68,6 +69,9 @@ export default function OrderStatus() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [justUpdated, setJustUpdated] = useState(false);
+  const [rating, setRating] = useState(0);
+  const [ratingComment, setRatingComment] = useState('');
+  const [ratingDone, setRatingDone] = useState(false);
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const fetchFreshData = async (id: string) => {
@@ -140,6 +144,13 @@ export default function OrderStatus() {
 
   const currentStepIndex = order ? getStepIndex(order.estado) : -1;
   const payInfo = order ? getPaymentLabel(order.pago_estado) : null;
+
+  const handleRating = async (stars: number) => {
+    if (!order || ratingDone) return;
+    setRating(stars);
+    const res = await submitRating(order.id, stars, ratingComment, order.cliente_nombre, order.servicio_id);
+    if (res.success) setRatingDone(true);
+  };
 
   return (
     <section id="status" className="py-24 bg-gradient-to-br from-slate-50 to-white border-t border-slate-100">
@@ -291,7 +302,33 @@ export default function OrderStatus() {
                     {order.detalles && (
                       <p className="text-slate-400 text-xs mt-1 italic leading-relaxed">&quot;{order.detalles}&quot;</p>
                     )}
+                    {order.created_at && (
+                      <p className="text-slate-600 text-[10px] font-bold mt-2 uppercase tracking-widest">Recibido: {new Date(order.created_at).toLocaleDateString('es-NI', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                    )}
+                    {order.deadline && (
+                      <p className="text-amber-400 text-[10px] font-black mt-1 uppercase tracking-widest">⏰ Fecha límite: {new Date(order.deadline).toLocaleDateString('es-NI', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
+                    )}
                   </div>
+
+                  {/* Calificación — solo cuando está entregado */}
+                  {order.estado === 'entregado' && (
+                    <div className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-6">
+                      <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-3">Califica tu experiencia</p>
+                      {ratingDone ? (
+                        <p className="text-green-400 font-black text-sm">¡Gracias por tu calificación! ⭐</p>
+                      ) : (
+                        <>
+                          <div className="flex gap-2 mb-3">
+                            {[1,2,3,4,5].map(s => (
+                              <button key={s} onClick={() => setRating(s)} className={`text-2xl transition-transform hover:scale-125 ${s <= rating ? 'text-yellow-400' : 'text-slate-600'}`}>★</button>
+                            ))}
+                          </div>
+                          <input type="text" placeholder="Comentario opcional..." className="w-full bg-white/10 border border-white/10 rounded-xl px-4 py-2 text-sm text-white placeholder-slate-500 mb-3 outline-none" value={ratingComment} onChange={e => setRatingComment(e.target.value)} />
+                          <button onClick={() => handleRating(rating)} disabled={rating === 0} className="bg-yellow-400 text-slate-900 px-6 py-2 rounded-xl font-black text-xs uppercase tracking-widest disabled:opacity-40 hover:bg-yellow-300 transition-all">Enviar</button>
+                        </>
+                      )}
+                    </div>
+                  )}
 
                   <div className="pt-6 border-t border-white/10 text-center">
                     <p className="text-slate-500 text-[10px] uppercase tracking-[0.2em] mb-1">Centro de Soporte FOL PS</p>

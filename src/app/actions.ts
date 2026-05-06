@@ -3,9 +3,19 @@
 import { supabaseServer } from '@/lib/supabase-server';
 import { Resend } from 'resend';
 
-// Solo inicializar Resend si existe la API Key para evitar que el servidor explote
 const resendKey = process.env.RESEND_API_KEY;
 const resend = resendKey ? new Resend(resendKey) : null;
+
+async function sendEmail(to: string, subject: string, html: string) {
+  if (!resend) return;
+  // Solo enviar si parece un email válido
+  if (!to.includes('@')) return;
+  try {
+    await resend.emails.send({ from: 'FOL PS <onboarding@resend.dev>', to: [to], subject, html });
+  } catch (e) {
+    console.error('[sendEmail] Error:', e);
+  }
+}
 
 export async function submitOrder(formData: {
   name: string;
@@ -15,77 +25,45 @@ export async function submitOrder(formData: {
   metodo_pago: string;
 }) {
   try {
-    // 1. Guardar en Supabase (SIEMPRE se intenta esto primero)
     const { data, error } = await supabaseServer
       .from('pedidos')
-      .insert([
-        { 
-          cliente_nombre: formData.name, 
-          cliente_contacto: formData.contact, 
-          servicio_id: formData.service, 
-          detalles: formData.details,
-          estado: 'pendiente',
-          metodo_pago: formData.metodo_pago,
-        }
-      ])
+      .insert([{
+        cliente_nombre: formData.name,
+        cliente_contacto: formData.contact,
+        servicio_id: formData.service,
+        detalles: formData.details,
+        estado: 'pendiente',
+        metodo_pago: formData.metodo_pago,
+      }])
       .select()
       .single();
 
     if (error) throw error;
 
-    // 2. Intentar enviar correo solo si Resend está configurado
-    if (resend) {
-      try {
-        await resend.emails.send({
-          from: 'FOL PS <onboarding@resend.dev>',
-          to: ['foldigital17@gmail.com'],
-          subject: `Nuevo Pedido: ${formData.service} - ${formData.name}`,
-          html: `
-            <h1>Nuevo Pedido Recibido</h1>
-            <p><strong>ID del Pedido:</strong> ${data.id}</p>
-            <p><strong>Cliente:</strong> ${formData.name}</p>
-            <p><strong>Contacto:</strong> ${formData.contact}</p>
-            <p><strong>Servicio:</strong> ${formData.service}</p>
-            <p><strong>Detalles:</strong> ${formData.details}</p>
-          `
-        });
-      } catch (emailError) {
-        console.error('Error al enviar email (pero el pedido se guardó):', emailError);
-      }
-    }
+    // Email al admin
+    await sendEmail('foldigital17@gmail.com', `Nuevo Pedido: ${formData.service} - ${formData.name}`,
+      `<h2>Nuevo Pedido</h2><p><b>ID:</b> ${data.id}</p><p><b>Cliente:</b> ${formData.name}</p><p><b>Contacto:</b> ${formData.contact}</p><p><b>Servicio:</b> ${formData.service}</p><p><b>Detalles:</b> ${formData.details}</p>`
+    );
+
+    // Email de confirmación al cliente (si puso correo)
+    await sendEmail(formData.contact, '✅ Pedido confirmado — FOL PS',
+      `<h2>¡Hola ${formData.name}!</h2><p>Tu pedido fue recibido con éxito.</p><p><b>Código de rastreo:</b> <code>${data.id}</code></p><p>Puedes rastrear tu pedido en: <a href="https://fol-ps.netlify.app/#status">fol-ps.netlify.app</a></p><p>Te avisaremos cuando haya novedades.</p><br><p>— Equipo FOL PS</p>`
+    );
 
     return { success: true, orderId: data.id };
   } catch (error) {
-    console.error('Error crítico al procesar pedido:', error);
+    console.error('[submitOrder] Error:', error);
     return { success: false, error };
   }
 }
 
 export async function deleteOrder(id: string) {
   try {
-    console.log('[deleteOrder] Intentando eliminar pedido:', id);
-    
-    // Usar select() para verificar que realmente se eliminó
-    const { data, error } = await supabaseServer
-      .from('pedidos')
-      .delete()
-      .eq('id', id)
-      .select();
-
-    if (error) {
-      console.error('[deleteOrder] Error de Supabase:', error);
-      return { success: false, error: error.message };
-    }
-
-    if (!data || data.length === 0) {
-      console.error('[deleteOrder] No se eliminó ninguna fila. Probablemente RLS bloquea DELETE. Agrega SUPABASE_SERVICE_ROLE_KEY a .env.local');
-      return { success: false, error: 'No se pudo eliminar. Verifica permisos en Supabase.' };
-    }
-
-    console.log('[deleteOrder] ✓ Eliminado exitosamente:', id);
+    const { data, error } = await supabaseServer.from('pedidos').delete().eq('id', id).select();
+    if (error) return { success: false, error: error.message };
+    if (!data || data.length === 0) return { success: false, error: 'No se pudo eliminar. Verifica permisos en Supabase.' };
     return { success: true };
   } catch (error) {
-    console.error('[deleteOrder] Error crítico:', error);
     return { success: false, error: String(error) };
   }
 }
@@ -96,10 +74,10 @@ export async function updateOrder(id: string, updateData: {
   monto_total: number;
   vendedor?: string;
   productor?: string;
+  deadline?: string;
+  notas_internas?: string;
 }) {
   try {
-    console.log('[updateOrder] Actualizando pedido:', id, updateData);
-
     const { data, error } = await supabaseServer
       .from('pedidos')
       .update({
@@ -108,24 +86,29 @@ export async function updateOrder(id: string, updateData: {
         monto_total: updateData.monto_total,
         vendedor: updateData.vendedor || null,
         productor: updateData.productor || null,
+        deadline: updateData.deadline || null,
+        notas_internas: updateData.notas_internas || null,
       })
       .eq('id', id)
-      .select();
+      .select()
+      .single();
 
-    if (error) {
-      console.error('[updateOrder] Error de Supabase:', error);
-      return { success: false, error: error.message };
-    }
+    if (error) return { success: false, error: error.message };
+    if (!data) return { success: false, error: 'No se pudo actualizar.' };
 
-    if (!data || data.length === 0) {
-      console.error('[updateOrder] No se actualizó ninguna fila. RLS puede estar bloqueando UPDATE.');
-      return { success: false, error: 'No se pudo actualizar. Verifica permisos en Supabase.' };
-    }
+    // Email al cliente cuando cambia el estado
+    const estadoLabels: Record<string, string> = {
+      pendiente: 'Recibido',
+      en_proceso: 'En Proceso',
+      revision: 'En Revisión de Calidad',
+      entregado: '¡Entregado!',
+    };
+    await sendEmail(data.cliente_contacto, `📦 Tu pedido está: ${estadoLabels[updateData.estado] || updateData.estado} — FOL PS`,
+      `<h2>Hola ${data.cliente_nombre},</h2><p>El estado de tu pedido cambió a: <b>${estadoLabels[updateData.estado] || updateData.estado}</b></p>${updateData.monto_total > 0 ? `<p><b>Monto:</b> C$${updateData.monto_total}</p>` : ''}<p>Rastrea tu pedido: <a href="https://fol-ps.netlify.app/#status">fol-ps.netlify.app</a></p><p>Código: <code>${id}</code></p><br><p>— Equipo FOL PS</p>`
+    );
 
-    console.log('[updateOrder] ✓ Actualizado:', id, '→', updateData.estado);
-    return { success: true, data: data[0] };
+    return { success: true, data };
   } catch (error) {
-    console.error('[updateOrder] Error crítico:', error);
     return { success: false, error: String(error) };
   }
 }
@@ -141,58 +124,42 @@ export async function saveToHistory(orderData: {
 }) {
   try {
     const { error } = await supabaseServer.from('historial_facturas').insert([orderData]);
-    if (error) {
-      console.error('[saveToHistory] Error:', error);
-      return { success: false };
-    }
+    if (error) return { success: false };
     return { success: true };
-  } catch (error) {
+  } catch {
     return { success: false };
   }
 }
+
 export async function deleteHistoryItem(id: string) {
   try {
-    const { error } = await supabaseServer
-      .from('historial_facturas')
-      .delete()
-      .eq('id', id);
-
+    const { error } = await supabaseServer.from('historial_facturas').delete().eq('id', id);
     if (error) throw error;
     return { success: true };
   } catch (error) {
-    console.error('[deleteHistoryItem] Error:', error);
     return { success: false, error: String(error) };
   }
 }
 
 export async function fetchAllOrders() {
   try {
-    const { data, error } = await supabaseServer
-      .from('pedidos')
-      .select('*')
-      .order('created_at', { ascending: false });
+    const { data, error } = await supabaseServer.from('pedidos').select('*').order('created_at', { ascending: false });
     if (error) throw error;
     return { success: true, data: data || [] };
   } catch (error) {
-    console.error('[fetchAllOrders] Error:', error);
     return { success: false, data: [] };
   }
 }
 
 export async function fetchAllHistory() {
   try {
-    const { data, error } = await supabaseServer
-      .from('historial_facturas')
-      .select('*')
-      .order('fecha_emision', { ascending: false });
+    const { data, error } = await supabaseServer.from('historial_facturas').select('*').order('fecha_emision', { ascending: false });
     if (error) throw error;
     return { success: true, data: data || [] };
   } catch (error) {
-    console.error('[fetchAllHistory] Error:', error);
     return { success: false, data: [] };
   }
 }
-
 
 export async function uploadOrderFile(orderId: string, formData: FormData) {
   try {
@@ -211,7 +178,6 @@ export async function uploadOrderFile(orderId: string, formData: FormData) {
 
     const { data: urlData } = supabaseServer.storage.from('entregas').getPublicUrl(path);
 
-    // Obtener datos del pedido para notificar al cliente
     const { data: order } = await supabaseServer
       .from('pedidos')
       .select('cliente_nombre, cliente_contacto')
@@ -225,6 +191,11 @@ export async function uploadOrderFile(orderId: string, formData: FormData) {
 
     if (updateError) throw updateError;
 
+    // Email al cliente con link de descarga
+    await sendEmail(order?.cliente_contacto || '', '🎉 Tu entrega está lista — FOL PS',
+      `<h2>¡Hola ${order?.cliente_nombre}!</h2><p>Tu pedido está listo para descargar.</p><p><a href="${urlData.publicUrl}" style="background:#16a34a;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;">Descargar Archivo</a></p><p>También puedes verlo en: <a href="https://fol-ps.netlify.app/#status">fol-ps.netlify.app</a></p><p>Código: <code>${orderId}</code></p><br><p>— Equipo FOL PS</p>`
+    );
+
     return {
       success: true,
       url: urlData.publicUrl,
@@ -234,5 +205,49 @@ export async function uploadOrderFile(orderId: string, formData: FormData) {
   } catch (error) {
     console.error('[uploadOrderFile] Error:', error);
     return { success: false, error: String(error) };
+  }
+}
+
+export async function submitRating(orderId: string, rating: number, comment: string, clienteName: string, servicio: string) {
+  try {
+    const { error } = await supabaseServer.from('calificaciones').insert([{
+      pedido_id: orderId,
+      rating,
+      comment,
+      cliente_nombre: clienteName,
+      servicio_id: servicio,
+    }]);
+    if (error) throw error;
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: String(error) };
+  }
+}
+
+export async function fetchReviews() {
+  try {
+    const { data, error } = await supabaseServer
+      .from('calificaciones')
+      .select('*')
+      .gte('rating', 4)
+      .order('created_at', { ascending: false })
+      .limit(6);
+    if (error) throw error;
+    return { success: true, data: data || [] };
+  } catch {
+    return { success: false, data: [] };
+  }
+}
+
+export async function fetchCompletedCount() {
+  try {
+    const { count, error } = await supabaseServer
+      .from('pedidos')
+      .select('*', { count: 'exact', head: true })
+      .eq('estado', 'entregado');
+    if (error) throw error;
+    return { success: true, count: count || 0 };
+  } catch {
+    return { success: false, count: 0 };
   }
 }
