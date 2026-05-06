@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle2, Clock, Send, ShieldCheck, Zap, ArrowLeft, Wallet, Info } from 'lucide-react';
+import { CheckCircle2, Clock, Send, ShieldCheck, Zap, ArrowLeft, Wallet, Info, Download } from 'lucide-react';
 import Link from 'next/link';
 
 export default function TrackOrderPage() {
@@ -125,6 +125,28 @@ export default function TrackOrderPage() {
               <p className="text-[10px] text-slate-400 mt-4 font-black uppercase tracking-widest">FOL PS Central Sync</p>
            </div>
         </div>
+
+        {order.archivo_entrega && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-8 bg-green-600 p-10 rounded-[3rem] shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-6"
+          >
+            <div className="text-white">
+              <p className="text-[10px] font-black uppercase tracking-[0.4em] mb-2 opacity-70">Archivo Disponible</p>
+              <p className="text-2xl font-black tracking-tighter">Tu entrega está lista para descargar</p>
+            </div>
+            <a
+              href={order.archivo_entrega}
+              target="_blank"
+              rel="noreferrer"
+              download
+              className="shrink-0 bg-white text-green-700 px-10 py-5 rounded-2xl font-black uppercase tracking-widest text-xs flex items-center gap-3 hover:bg-slate-900 hover:text-white transition-all shadow-xl"
+            >
+              <Download className="w-5 h-5" /> Descargar
+            </a>
+          </motion.div>
+        )}
       </main>
     </div>
   );

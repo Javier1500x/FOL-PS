@@ -9,10 +9,11 @@ import {
   fetchAllOrders,
   fetchAllHistory,
   deleteHistoryItem,
+  uploadOrderFile,
 } from '@/app/actions';
 import {
   ShoppingBag, LogOut, Bell, X, Save,
-  FileText, TrendingUp, Trash2, History, Search, Package, RefreshCw, MessageCircle, Mail, Ban
+  FileText, TrendingUp, Trash2, History, Search, Package, RefreshCw, MessageCircle, Mail, Ban, Upload, Paperclip
 } from 'lucide-react';
 
 const ESTADOS = [
@@ -46,6 +47,7 @@ export default function AdminDashboard() {
   const [searchId, setSearchId] = useState('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const prevOrderIdsRef = useRef<Set<string>>(new Set());
   const alertTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -169,6 +171,21 @@ export default function AdminDashboard() {
     setSaving(false);
   };
 
+  const handleUploadFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!editingOrder || !e.target.files?.[0]) return;
+    setUploading(true);
+    const fd = new FormData();
+    fd.append('file', e.target.files[0]);
+    const result = await uploadOrderFile(editingOrder.id, fd);
+    if (result.success) {
+      setEditingOrder({ ...editingOrder, archivo_entrega: result.url });
+      setOrders(prev => prev.map(o => o.id === editingOrder.id ? { ...o, archivo_entrega: result.url } : o));
+    } else {
+      alert('Error al subir archivo: ' + result.error);
+    }
+    setUploading(false);
+  };
+
   const contactWhatsApp = (order: any) => {
     const phone = order.cliente_contacto.replace(/\D/g, '');
     const msg = encodeURIComponent(`Hola ${order.cliente_nombre}, te contactamos de FOL PS sobre tu pedido de ${order.servicio_id}.`);
@@ -244,7 +261,7 @@ export default function AdminDashboard() {
               <tbody className="divide-y divide-slate-100">
                 {orders.map((o) => (
                   <tr key={o.id} className="hover:bg-blue-50/40 transition-all">
-                    <td className="px-8 py-8"><div className="font-black text-xl tracking-tighter uppercase">{o.cliente_nombre}</div><div className="text-[10px] font-bold text-blue-500">{o.servicio_id}</div></td>
+                    <td className="px-8 py-8"><div className="font-black text-xl tracking-tighter uppercase">{o.cliente_nombre}</div><div className="text-[10px] font-bold text-blue-500">{o.servicio_id}</div><div className="text-[10px] font-bold mt-1 text-slate-400 uppercase">{o.metodo_pago === 'deposito_lafise' ? 'Depósito LAFISE' : 'Efectivo'}</div></td>
                     <td className="px-8 py-8">
                       <div className="flex gap-2">
                         <button onClick={() => contactWhatsApp(o)} className="p-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-600 hover:text-white transition-all"><MessageCircle size={18} /></button>
@@ -312,6 +329,22 @@ export default function AdminDashboard() {
                 <div><label className="text-xs font-black uppercase tracking-widest mb-2 block">Staff</label><div className="flex gap-2"><input placeholder="Vendedor" className="w-1/2 p-4 rounded-xl bg-slate-50" value={editingOrder.vendedor || ''} onChange={(e) => setEditingOrder({ ...editingOrder, vendedor: e.target.value })} /><input placeholder="Productor" className="w-1/2 p-4 rounded-xl bg-slate-50" value={editingOrder.productor || ''} onChange={(e) => setEditingOrder({ ...editingOrder, productor: e.target.value })} /></div></div>
               </div>
               <button onClick={handleUpdateOrder} disabled={saving} className="w-full bg-slate-900 text-white py-6 rounded-[2rem] font-black uppercase shadow-xl hover:bg-blue-600 transition-all">{saving ? 'Guardando...' : 'Sincronizar'}</button>
+
+              {/* Subir archivo de entrega */}
+              <div className="mt-6 border-t border-slate-100 pt-6">
+                <label className="text-xs font-black uppercase tracking-widest mb-3 block text-slate-500">Archivo de Entrega</label>
+                {editingOrder.archivo_entrega && (
+                  <div className="flex items-center gap-2 mb-3 p-3 bg-green-50 rounded-xl border border-green-200">
+                    <Paperclip size={14} className="text-green-600 shrink-0" />
+                    <a href={editingOrder.archivo_entrega} target="_blank" rel="noreferrer" className="text-xs text-green-700 font-bold truncate hover:underline">Archivo subido — ver</a>
+                  </div>
+                )}
+                <label className={`w-full flex items-center justify-center gap-3 py-4 rounded-2xl border-2 border-dashed border-slate-300 cursor-pointer hover:border-blue-600 hover:bg-blue-50 transition-all font-black text-xs uppercase text-slate-500 ${uploading ? 'opacity-50 pointer-events-none' : ''}`}>
+                  <Upload size={18} />
+                  {uploading ? 'Subiendo...' : 'Subir archivo (PDF, PPT, DOC, XLS…)'}
+                  <input type="file" className="hidden" accept=".pdf,.ppt,.pptx,.doc,.docx,.xls,.xlsx,.zip" onChange={handleUploadFile} />
+                </label>
+              </div>
             </div>
           </div>
         </div>

@@ -11,7 +11,8 @@ export default function ContactForm() {
     name: '',
     contact: '',
     service: '',
-    details: ''
+    details: '',
+    metodo_pago: 'efectivo',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -28,7 +29,7 @@ export default function ContactForm() {
     if (result.success) {
       setLastOrderId(result.orderId);
       setShowSuccess(true);
-      setFormData({ name: '', contact: '', service: '', details: '' });
+      setFormData({ name: '', contact: '', service: '', details: '', metodo_pago: 'efectivo' });
     } else {
       alert('Hubo un error al enviar tu pedido. Por favor intenta por WhatsApp.');
     }
@@ -105,6 +106,25 @@ export default function ContactForm() {
                 <option value="Asesoría">Asesoría / Tutoría</option>
                 <option value="Otro">Otro servicio</option>
               </select>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-slate-700 mb-2">Método de Pago</label>
+              <div className="flex gap-4">
+                <label className={`flex-1 flex items-center gap-3 px-4 py-3 rounded-xl border-2 cursor-pointer transition-all ${formData.metodo_pago === 'efectivo' ? 'border-slate-900 bg-slate-50' : 'border-slate-200'}`}>
+                  <input type="radio" name="metodo_pago" value="efectivo" checked={formData.metodo_pago === 'efectivo'} onChange={(e) => setFormData({ ...formData, metodo_pago: e.target.value })} className="accent-slate-900" />
+                  <span className="font-bold text-slate-800">Efectivo</span>
+                </label>
+                <label className={`flex-1 flex items-center gap-3 px-4 py-3 rounded-xl border-2 cursor-pointer transition-all ${formData.metodo_pago === 'deposito_lafise' ? 'border-slate-900 bg-slate-50' : 'border-slate-200'}`}>
+                  <input type="radio" name="metodo_pago" value="deposito_lafise" checked={formData.metodo_pago === 'deposito_lafise'} onChange={(e) => setFormData({ ...formData, metodo_pago: e.target.value })} className="accent-slate-900" />
+                  <span className="font-bold text-slate-800">Depósito LAFISE</span>
+                </label>
+              </div>
+              {formData.metodo_pago === 'deposito_lafise' && (
+                <div className="mt-3 p-4 bg-slate-50 rounded-xl border border-slate-200 text-sm text-slate-700 font-medium">
+                  Cuenta LAFISE Córdoba: <span className="font-black text-slate-900">137038005</span> — A nombre de <span className="font-black text-slate-900">Leandro Calero</span>
+                </div>
+              )}
             </div>
 
             <div className="mb-8">

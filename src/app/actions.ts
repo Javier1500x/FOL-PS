@@ -12,6 +12,7 @@ export async function submitOrder(formData: {
   contact: string;
   service: string;
   details: string;
+  metodo_pago: string;
 }) {
   try {
     // 1. Guardar en Supabase (SIEMPRE se intenta esto primero)
@@ -23,7 +24,8 @@ export async function submitOrder(formData: {
           cliente_contacto: formData.contact, 
           servicio_id: formData.service, 
           detalles: formData.details,
-          estado: 'pendiente'
+          estado: 'pendiente',
+          metodo_pago: formData.metodo_pago,
         }
       ])
       .select()
@@ -188,5 +190,37 @@ export async function fetchAllHistory() {
   } catch (error) {
     console.error('[fetchAllHistory] Error:', error);
     return { success: false, data: [] };
+  }
+}
+
+
+export async function uploadOrderFile(orderId: string, formData: FormData) {
+  try {
+    const file = formData.get('file') as File;
+    if (!file) return { success: false, error: 'No file provided' };
+
+    const ext = file.name.split('.').pop();
+    const path = `${orderId}/${Date.now()}.${ext}`;
+    const buffer = Buffer.from(await file.arrayBuffer());
+
+    const { error: uploadError } = await supabaseServer.storage
+      .from('entregas')
+      .upload(path, buffer, { contentType: file.type, upsert: true });
+
+    if (uploadError) throw uploadError;
+
+    const { data: urlData } = supabaseServer.storage.from('entregas').getPublicUrl(path);
+
+    const { error: updateError } = await supabaseServer
+      .from('pedidos')
+      .update({ archivo_entrega: urlData.publicUrl })
+      .eq('id', orderId);
+
+    if (updateError) throw updateError;
+
+    return { success: true, url: urlData.publicUrl };
+  } catch (error) {
+    console.error('[uploadOrderFile] Error:', error);
+    return { success: false, error: String(error) };
   }
 }
