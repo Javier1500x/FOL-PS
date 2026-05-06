@@ -23,8 +23,8 @@ export default function TrackOrderPage() {
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'pedidos', filter: `id=eq.${id}` },
-        () => {
-          fetchOrder();
+        (payload) => {
+          if (payload.new) setOrder(payload.new);
         }
       )
       .on(
@@ -148,6 +148,14 @@ export default function TrackOrderPage() {
               <p className="text-sm font-bold">Monto: <span className="font-black text-xl">C${order.monto_total}</span></p>
             </div>
             <p className="text-blue-200 text-xs font-bold mt-4 uppercase tracking-widest">Una vez confirmado el pago, tu archivo aparecerá aquí automáticamente.</p>
+            <a
+              href={`https://wa.me/50585853867?text=${encodeURIComponent(`Hola FOL PS! Soy ${order.cliente_nombre}, acabo de realizar el depósito de C$${order.monto_total} por mi pedido (ID: ${order.id}). Adjunto el comprobante.`)}`}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-6 w-full flex items-center justify-center gap-3 bg-white text-blue-700 py-5 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-slate-900 hover:text-white transition-all shadow-xl"
+            >
+              <Send className="w-5 h-5" /> Enviar comprobante por WhatsApp
+            </a>
           </motion.div>
         )}
 
