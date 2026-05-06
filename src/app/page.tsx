@@ -1,65 +1,86 @@
-import Image from "next/image";
+import Navbar from '@/components/Navbar';
+import Hero from '@/components/Hero';
+import Services from '@/components/Services';
+import OrderStatus from '@/components/OrderStatus';
+import ContactForm from '@/components/ContactForm';
+import { Users, ShieldCheck, Zap, Cpu } from 'lucide-react';
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className="min-h-screen">
+      <Navbar />
+      <Hero />
+      
+      {/* Features Section */}
+      <section className="py-24 bg-white">
+        <div className="container mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-16">
+          <div className="flex flex-col items-center text-center group">
+            <div className="w-20 h-20 bg-slate-900 rounded-[2rem] shadow-2xl flex items-center justify-center mb-8 text-white group-hover:scale-110 transition-transform">
+              <ShieldCheck className="w-10 h-10" />
+            </div>
+            <h3 className="text-2xl font-black mb-4 text-slate-900 uppercase tracking-tighter">Confiabilidad</h3>
+            <p className="text-slate-600 font-bold leading-relaxed">Trabajos blindados con garantía FOL PS. Entregas puntuales que aseguran tu éxito académico.</p>
+          </div>
+          <div className="flex flex-col items-center text-center group">
+            <div className="w-20 h-20 bg-blue-600 rounded-[2rem] shadow-2xl flex items-center justify-center mb-8 text-white group-hover:scale-110 transition-transform">
+              <Zap className="w-10 h-10" />
+            </div>
+            <h3 className="text-2xl font-black mb-4 text-slate-900 uppercase tracking-tighter">Alto Rendimiento</h3>
+            <p className="text-slate-600 font-bold leading-relaxed">Procesamos requerimientos con agilidad extrema. Calidad aplicada a cada detalle.</p>
+          </div>
+          <div className="flex flex-col items-center text-center group">
+            <div className="w-20 h-20 bg-slate-100 rounded-[2rem] shadow-xl flex items-center justify-center mb-8 text-slate-900 group-hover:scale-110 transition-transform border-2 border-slate-900">
+              <Cpu className="w-10 h-10" />
+            </div>
+            <h3 className="text-2xl font-black mb-4 text-slate-900 uppercase tracking-tighter">Experticia Técnica</h3>
+            <p className="text-slate-600 font-bold leading-relaxed">Mentes formadas en la UNI. Soluciones digitales escalables y optimizadas para el mundo real.</p>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </section>
+
+      <Services />
+      <OrderStatus />
+
+      {/* About Us Section */}
+      <section id="about" className="py-24 bg-slate-900 text-white overflow-hidden relative">
+        <div className="container mx-auto px-6 relative z-10">
+          <div className="max-w-3xl">
+            <h2 className="text-3xl md:text-5xl font-black mb-8 italic tracking-tight leading-tight">
+              &quot;Fundado para el éxito de todos.&quot;
+            </h2>
+            <p className="text-lg md:text-xl text-slate-400 mb-12 leading-relaxed font-bold">
+              Somos Félix, Oscar y Leandro, estudiantes de Sistemas en la UNI. 
+              FOL PS nació para ofrecer servicios digitales y académicos accesibles y profesionales. 
+              Nuestra visión es convertirnos en una agencia digital y centro académico referente, 
+              garantizando entregas limpias y atención rápida.
+            </p>
+            <div className="flex gap-12">
+              <div className="text-center md:text-left">
+                <p className="text-4xl md:text-6xl font-black text-blue-500 mb-1 tracking-tighter">100%</p>
+                <p className="text-slate-500 uppercase tracking-widest text-[10px] font-black">Calidad</p>
+              </div>
+              <div className="text-center md:text-left">
+                <p className="text-4xl md:text-6xl font-black text-white mb-1 tracking-tighter">UNI</p>
+                <p className="text-slate-500 uppercase tracking-widest text-[10px] font-black">Formación</p>
+              </div>
+            </div>
+          </div>
         </div>
-      </main>
-    </div>
+        <div className="absolute top-0 right-0 w-1/2 h-full bg-slate-800 skew-x-12 translate-x-32 -z-0 hidden lg:block opacity-20"></div>
+      </section>
+
+      <ContactForm />
+
+      <footer className="py-12 bg-white border-t border-slate-100">
+        <div className="container mx-auto px-6 text-center">
+          <p className="text-2xl font-bold text-slate-900 mb-4 tracking-tighter">FOL-Digital</p>
+          <p className="text-slate-500 mb-8">© 2026 FOL-Digital. Managua, Nicaragua.</p>
+          <div className="flex justify-center gap-6">
+            <a href="#" className="text-slate-400 hover:text-slate-900 transition-colors">Instagram</a>
+            <a href="#" className="text-slate-400 hover:text-slate-900 transition-colors">WhatsApp</a>
+          </div>
+        </div>
+      </footer>
+    </main>
   );
 }
