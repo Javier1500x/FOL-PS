@@ -211,14 +211,26 @@ export async function uploadOrderFile(orderId: string, formData: FormData) {
 
     const { data: urlData } = supabaseServer.storage.from('entregas').getPublicUrl(path);
 
+    // Obtener datos del pedido para notificar al cliente
+    const { data: order } = await supabaseServer
+      .from('pedidos')
+      .select('cliente_nombre, cliente_contacto')
+      .eq('id', orderId)
+      .single();
+
     const { error: updateError } = await supabaseServer
       .from('pedidos')
-      .update({ archivo_entrega: urlData.publicUrl })
+      .update({ archivo_entrega: urlData.publicUrl, estado: 'entregado' })
       .eq('id', orderId);
 
     if (updateError) throw updateError;
 
-    return { success: true, url: urlData.publicUrl };
+    return {
+      success: true,
+      url: urlData.publicUrl,
+      clienteNombre: order?.cliente_nombre || '',
+      clienteContacto: order?.cliente_contacto || '',
+    };
   } catch (error) {
     console.error('[uploadOrderFile] Error:', error);
     return { success: false, error: String(error) };

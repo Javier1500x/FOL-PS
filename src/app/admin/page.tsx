@@ -178,8 +178,16 @@ export default function AdminDashboard() {
     fd.append('file', e.target.files[0]);
     const result = await uploadOrderFile(editingOrder.id, fd);
     if (result.success) {
-      setEditingOrder({ ...editingOrder, archivo_entrega: result.url });
-      setOrders(prev => prev.map(o => o.id === editingOrder.id ? { ...o, archivo_entrega: result.url } : o));
+      setEditingOrder({ ...editingOrder, archivo_entrega: result.url, estado: 'entregado' });
+      setOrders(prev => prev.map(o => o.id === editingOrder.id ? { ...o, archivo_entrega: result.url, estado: 'entregado' } : o));
+
+      // Notificar al cliente por WhatsApp automáticamente
+      const contacto = result.clienteContacto || '';
+      const nombre = result.clienteNombre || editingOrder.cliente_nombre;
+      const phone = contacto.replace(/\D/g, '');
+      const msg = encodeURIComponent(`Hola ${nombre}! 🎉 Tu pedido de FOL PS ya está listo. Puedes descargar tu archivo aquí: ${result.url}\n\nCódigo de pedido: ${editingOrder.id}`);
+      const waNumber = phone.length >= 8 ? (phone.startsWith('505') ? phone : `505${phone}`) : '50585853867';
+      window.open(`https://wa.me/${waNumber}?text=${msg}`, '_blank');
     } else {
       alert('Error al subir archivo: ' + result.error);
     }

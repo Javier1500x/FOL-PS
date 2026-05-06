@@ -76,8 +76,8 @@ export default function Home() {
           <p className="text-2xl font-bold text-slate-900 mb-4 tracking-tighter">FOL-Digital</p>
           <p className="text-slate-500 mb-8">© 2026 FOL-Digital. Managua, Nicaragua.</p>
           <div className="flex justify-center gap-6">
-            <a href="#" className="text-slate-400 hover:text-slate-900 transition-colors">Instagram</a>
-            <a href="#" className="text-slate-400 hover:text-slate-900 transition-colors">WhatsApp</a>
+            <a href="https://www.instagram.com/fol_digital?igsh=dnR4ZnR4ZTZ0ZXVj" target="_blank" rel="noreferrer" className="text-slate-400 hover:text-slate-900 transition-colors">Instagram</a>
+            <a href="https://wa.me/50585853867" target="_blank" rel="noreferrer" className="text-slate-400 hover:text-slate-900 transition-colors">WhatsApp</a>
           </div>
         </div>
       </footer>

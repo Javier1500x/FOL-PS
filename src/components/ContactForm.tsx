@@ -122,8 +122,8 @@ export default function ContactForm() {
                 </label>
               </div>
               {formData.metodo_pago === 'deposito_lafise' && (
-                <div className="mt-3 p-4 bg-slate-50 rounded-xl border border-slate-200 text-sm text-slate-700 font-medium">
-                  Cuenta LAFISE Córdoba: <span className="font-black text-slate-900">137038005</span> — A nombre de <span className="font-black text-slate-900">Leandro Calero</span>
+                <div className="mt-3 p-4 bg-amber-50 rounded-xl border border-amber-200 text-sm text-amber-800 font-medium">
+                  ⚠️ El precio será asignado por el vendedor una vez revisado tu pedido. Te avisaremos por WhatsApp o correo con el monto y los datos de depósito para que puedas realizar el pago.
                 </div>
               )}
             </div>
