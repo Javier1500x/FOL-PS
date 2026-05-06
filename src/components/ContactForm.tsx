@@ -102,6 +102,7 @@ export default function ContactForm() {
                 <option value="">Selecciona un servicio</option>
                 <option value="Investigación">Investigación / Académico</option>
                 <option value="Diapositivas">Diapositivas / Presentación</option>
+                <option value="Tablas">Tablas / Cuadros</option>
                 <option value="Diseño">Diseño / Logo</option>
                 <option value="Asesoría">Asesoría / Tutoría</option>
                 <option value="Otro">Otro servicio</option>
