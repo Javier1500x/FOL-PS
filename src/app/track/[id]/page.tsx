@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -12,12 +12,19 @@ export default function TrackOrderPage() {
   const id = params.id as string;
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const pollRef = useRef<NodeJS.Timeout | null>(null);
+
+  async function fetchOrder() {
+    const { data } = await supabase.from('pedidos').select('*').eq('id', id).single();
+    if (data) setOrder(data);
+    setLoading(false);
+  }
 
   useEffect(() => {
     if (!id) return;
     fetchOrder();
 
-    // ESCUCHA REALTIME DINÁMICA MEJORADA
+    // Realtime (intento principal)
     const channel = supabase
       .channel(`order-track-${id}`)
       .on(
@@ -30,20 +37,18 @@ export default function TrackOrderPage() {
       .on(
         'postgres_changes',
         { event: 'DELETE', schema: 'public', table: 'pedidos', filter: `id=eq.${id}` },
-        () => {
-          setOrder(null);
-        }
+        () => setOrder(null)
       )
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
-  }, [id]);
+    // Polling de respaldo cada 4s (garantiza actualización aunque realtime falle)
+    pollRef.current = setInterval(fetchOrder, 4000);
 
-  async function fetchOrder() {
-    const { data } = await supabase.from('pedidos').select('*').eq('id', id).single();
-    if (data) setOrder(data);
-    setLoading(false);
-  }
+    return () => {
+      supabase.removeChannel(channel);
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
+  }, [id]);
 
   const steps = [
     { key: 'pendiente', label: 'Recibido', icon: ShieldCheck, desc: 'Tu requerimiento está en cola de procesamiento.' },
@@ -162,6 +167,7 @@ export default function TrackOrderPage() {
         {/* Botón de descarga: solo cuando el admin sube el archivo */}
         {order.archivo_entrega && (
           <motion.div
+            key={order.archivo_entrega}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="mt-8 bg-green-600 p-10 rounded-[3rem] shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-6"
