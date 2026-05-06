@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle2, Clock, Send, ShieldCheck, Zap, ArrowLeft, Wallet, Info, Download } from 'lucide-react';
+import { CheckCircle2, Clock, Send, ShieldCheck, Zap, ArrowLeft, Wallet, Info, Download, Banknote } from 'lucide-react';
 import Link from 'next/link';
 
 export default function TrackOrderPage() {
@@ -23,9 +23,8 @@ export default function TrackOrderPage() {
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'pedidos', filter: `id=eq.${id}` },
-        (payload) => {
-          console.log('Sincronización en vivo recibida:', payload.new);
-          setOrder(payload.new);
+        () => {
+          fetchOrder();
         }
       )
       .on(
@@ -86,9 +85,11 @@ export default function TrackOrderPage() {
           </h1>
           <div className="flex flex-wrap gap-4 items-center">
             <div className="bg-white px-8 py-4 rounded-[2rem] border-2 border-slate-100 font-mono text-xs text-slate-900 shadow-xl flex items-center gap-3 font-black">ID: {order.id}</div>
-            <div className="bg-slate-900 text-white px-8 py-4 rounded-[2rem] shadow-2xl flex items-center gap-3 font-black uppercase text-xs tracking-widest">
-               <Wallet className="w-5 h-5 text-blue-400" /> Presupuesto: C${order.monto_total || 0}
-            </div>
+            {order.monto_total > 0 && (
+              <div className="bg-slate-900 text-white px-8 py-4 rounded-[2rem] shadow-2xl flex items-center gap-3 font-black uppercase text-xs tracking-widest">
+                <Wallet className="w-5 h-5 text-blue-400" /> Precio: C${order.monto_total}
+              </div>
+            )}
           </div>
         </motion.div>
 
@@ -126,6 +127,31 @@ export default function TrackOrderPage() {
            </div>
         </div>
 
+        {/* Datos de depósito: solo si eligió depósito Y ya hay precio Y aún no hay archivo */}
+        {order.metodo_pago === 'deposito_lafise' && order.monto_total > 0 && !order.archivo_entrega && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-8 bg-blue-600 p-10 rounded-[3rem] shadow-2xl"
+          >
+            <div className="flex items-center gap-4 mb-6">
+              <Banknote className="w-10 h-10 text-white shrink-0" />
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-blue-200 mb-1">Paso siguiente</p>
+                <p className="text-2xl font-black text-white tracking-tighter">Realiza tu depósito para recibir tu entrega</p>
+              </div>
+            </div>
+            <div className="bg-white/10 rounded-2xl p-6 text-white space-y-2">
+              <p className="text-sm font-bold">Banco: <span className="font-black">LAFISE</span></p>
+              <p className="text-sm font-bold">Cuenta Córdobas: <span className="font-black text-xl">137038005</span></p>
+              <p className="text-sm font-bold">A nombre de: <span className="font-black">Leandro Calero</span></p>
+              <p className="text-sm font-bold">Monto: <span className="font-black text-xl">C${order.monto_total}</span></p>
+            </div>
+            <p className="text-blue-200 text-xs font-bold mt-4 uppercase tracking-widest">Una vez confirmado el pago, tu archivo aparecerá aquí automáticamente.</p>
+          </motion.div>
+        )}
+
+        {/* Botón de descarga: solo cuando el admin sube el archivo */}
         {order.archivo_entrega && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
