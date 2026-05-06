@@ -306,7 +306,7 @@ export default function OrderStatus() {
                       <p className="text-slate-600 text-[10px] font-bold mt-2 uppercase tracking-widest">Recibido: {new Date(order.created_at).toLocaleDateString('es-NI', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
                     )}
                     {order.deadline && (
-                      <p className="text-amber-400 text-[10px] font-black mt-1 uppercase tracking-widest">⏰ Fecha límite: {new Date(order.deadline).toLocaleDateString('es-NI', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
+                      <p className="text-amber-400 text-[10px] font-black mt-1 uppercase tracking-widest">⏰ Fecha límite: {order.deadline.slice(0, 10).split('-').reverse().join('/')}</p>
                     )}
                   </div>
 
