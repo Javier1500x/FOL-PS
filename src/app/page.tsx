@@ -3,6 +3,7 @@ import Hero from '@/components/Hero';
 import Services from '@/components/Services';
 import OrderStatus from '@/components/OrderStatus';
 import ContactForm from '@/components/ContactForm';
+import QuoteForm from '@/components/QuoteForm';
 import { ShieldCheck, Zap, Cpu } from 'lucide-react';
 import { fetchReviews, fetchCompletedCount } from '@/app/actions';
 
@@ -104,6 +105,8 @@ export default async function Home() {
           </div>
         </section>
       )}
+
+      <QuoteForm />
 
       <footer className="py-12 bg-white border-t border-slate-100">
         <div className="container mx-auto px-6 text-center">

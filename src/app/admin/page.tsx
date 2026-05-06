@@ -10,6 +10,7 @@ import {
   fetchAllHistory,
   deleteHistoryItem,
   uploadOrderFile,
+  fetchUrgentOrders,
 } from '@/app/actions';
 import {
   ShoppingBag, LogOut, Bell, X, Save,
@@ -268,6 +269,18 @@ export default function AdminDashboard() {
         <div className="mt-4 p-4 bg-slate-800 rounded-2xl text-xs text-slate-400 font-bold flex items-center gap-2">
           <RefreshCw className="w-3 h-3 animate-spin" /><span>Sincronización FOL</span>
         </div>
+        <button onClick={async () => {
+          const res = await fetchUrgentOrders();
+          if (!res.data.length) { alert('No hay pedidos urgentes hoy.'); return; }
+          res.data.forEach((o: any) => {
+            const phone = (o.cliente_contacto || '').replace(/\D/g, '');
+            const wa = phone.length >= 8 ? (phone.startsWith('505') ? phone : `505${phone}`) : '50585853867';
+            const msg = encodeURIComponent(`Hola ${o.cliente_nombre}! 🔔 Recordatorio: tu pedido de ${o.servicio_id} vence mañana. Estamos trabajando en ello. Código: ${o.id}`);
+            window.open(`https://wa.me/${wa}?text=${msg}`, '_blank');
+          });
+        }} className="mt-3 flex items-center justify-center gap-2 py-3 bg-red-500/10 text-red-400 rounded-2xl font-black text-[10px] uppercase border border-red-500/20 hover:bg-red-600 hover:text-white transition-all">
+          <Bell className="w-4 h-4" /> Avisar Urgentes
+        </button>
         <button onClick={() => { localStorage.clear(); router.push('/login'); }} className="mt-4 flex items-center justify-center gap-3 py-4 bg-red-500/10 text-red-500 rounded-2xl font-black text-xs uppercase border border-red-500/20 hover:bg-red-600 hover:text-white transition-all">
           <LogOut className="w-4 h-4" /> Cerrar Sesión
         </button>
@@ -303,7 +316,7 @@ export default function AdminDashboard() {
                 <tbody className="divide-y divide-slate-100">
                   {filteredOrders.map((o) => (
                     <tr key={o.id} className="hover:bg-blue-50/40 transition-all">
-                      <td className="px-8 py-8"><div className="font-black text-xl tracking-tighter uppercase">{o.cliente_nombre}</div><div className="text-[10px] font-bold text-blue-500">{o.servicio_id}</div><div className="text-[10px] font-bold mt-1 text-slate-400 uppercase">{o.metodo_pago === 'deposito_lafise' ? 'Depósito LAFISE' : 'Efectivo'}</div></td>
+                      <td className="px-8 py-8"><div className="font-black text-xl tracking-tighter uppercase">{o.cliente_nombre}</div><div className="text-[10px] font-bold text-blue-500">{o.servicio_id}</div><div className="text-[10px] font-bold mt-1 text-slate-400 uppercase">{o.metodo_pago === 'deposito_lafise' ? 'Depósito LAFISE' : 'Efectivo'}{o.deadline && (Date.now() > new Date(o.deadline + 'T23:59:59').getTime() - 86400000) && o.estado !== 'entregado' && <span className="ml-2 bg-red-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase animate-pulse">⚠ URGENTE</span>}</div></td>
                       <td className="px-8 py-8">
                         <div className="flex gap-2">
                           <button onClick={() => contactWhatsApp(o)} className="p-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-600 hover:text-white transition-all"><MessageCircle size={18} /></button>

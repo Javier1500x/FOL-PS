@@ -251,3 +251,21 @@ export async function fetchCompletedCount() {
     return { success: false, count: 0 };
   }
 }
+
+export async function fetchUrgentOrders() {
+  try {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = tomorrow.toISOString().slice(0, 10);
+    const { data, error } = await supabaseServer
+      .from('pedidos')
+      .select('id, cliente_nombre, cliente_contacto, servicio_id, deadline')
+      .lte('deadline', tomorrowStr)
+      .neq('estado', 'entregado')
+      .not('deadline', 'is', null);
+    if (error) throw error;
+    return { success: true, data: data || [] };
+  } catch {
+    return { success: false, data: [] };
+  }
+}

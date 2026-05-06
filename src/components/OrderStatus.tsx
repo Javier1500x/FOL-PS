@@ -2,9 +2,30 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Search, Loader2, CheckCircle2, Clock, Send, Package, RefreshCw, Download, Banknote, Star } from 'lucide-react';
+import { Search, Loader2, CheckCircle2, Clock, Send, Package, RefreshCw, Download, Banknote, Star, Share2 } from 'lucide-react';
 import { submitRating } from '@/app/actions';
 import { motion, AnimatePresence } from 'framer-motion';
+
+function useCountdown(deadline: string | null) {
+  const [timeLeft, setTimeLeft] = useState('');
+  const [isUrgent, setIsUrgent] = useState(false);
+  useEffect(() => {
+    if (!deadline) return;
+    const tick = () => {
+      const diff = new Date(deadline + 'T23:59:59').getTime() - Date.now();
+      if (diff <= 0) { setTimeLeft('¡Vencido!'); setIsUrgent(true); return; }
+      const d = Math.floor(diff / 86400000);
+      const h = Math.floor((diff % 86400000) / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      setIsUrgent(diff < 86400000);
+      setTimeLeft(d > 0 ? `${d}d ${h}h ${m}m` : `${h}h ${m}m`);
+    };
+    tick();
+    const t = setInterval(tick, 60000);
+    return () => clearInterval(t);
+  }, [deadline]);
+  return { timeLeft, isUrgent };
+}
 
 const STATUS_STEPS = [
   {
@@ -144,6 +165,7 @@ export default function OrderStatus() {
 
   const currentStepIndex = order ? getStepIndex(order.estado) : -1;
   const payInfo = order ? getPaymentLabel(order.pago_estado) : null;
+  const { timeLeft, isUrgent } = useCountdown(order?.deadline || null);
 
   const handleRating = async (stars: number) => {
     if (!order || ratingDone) return;
@@ -204,6 +226,21 @@ export default function OrderStatus() {
               transition={{ type: 'spring', stiffness: 260, damping: 20 }}
               className="relative"
             >
+              {/* Confetti cuando está entregado */}
+              {order.estado === 'entregado' && (
+                <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-[2.5rem]" aria-hidden>
+                  {[...Array(18)].map((_, i) => (
+                    <motion.div key={i}
+                      initial={{ y: -20, x: `${(i * 5.5) % 100}%`, opacity: 1, rotate: 0 }}
+                      animate={{ y: '110%', opacity: 0, rotate: 360 * (i % 2 === 0 ? 1 : -1) }}
+                      transition={{ duration: 1.8 + (i % 4) * 0.3, delay: i * 0.08, ease: 'easeIn' }}
+                      className="absolute top-0 w-2 h-2 rounded-sm"
+                      style={{ background: ['#3b82f6','#22c55e','#f59e0b','#ec4899','#a855f7'][i % 5] }}
+                    />
+                  ))}
+                </div>
+              )}
+
               {/* Notificación de actualización */}
               <AnimatePresence>
                 {justUpdated && (
@@ -305,9 +342,18 @@ export default function OrderStatus() {
                     {order.created_at && (
                       <p className="text-slate-600 text-[10px] font-bold mt-2 uppercase tracking-widest">Recibido: {new Date(order.created_at).toLocaleDateString('es-NI', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
                     )}
-                    {order.deadline && (
-                      <p className="text-amber-400 text-[10px] font-black mt-1 uppercase tracking-widest">⏰ Fecha límite: {order.deadline.slice(0, 10).split('-').reverse().join('/')}</p>
+                    {order.deadline && timeLeft && (
+                      <div className={`mt-2 flex items-center gap-2 px-3 py-1.5 rounded-xl w-fit ${isUrgent ? 'bg-red-500/20 text-red-400' : 'bg-amber-500/10 text-amber-400'}`}>
+                        <Clock className="w-3 h-3 shrink-0" />
+                        <p className="text-[10px] font-black uppercase tracking-widest">{isUrgent ? '⚠ URGENTE — ' : '⏰ Faltan: '}{timeLeft}</p>
+                      </div>
                     )}
+                    <button
+                      onClick={() => { navigator.clipboard.writeText(window.location.origin + '/#status'); alert('¡Link copiado!'); }}
+                      className="mt-3 flex items-center gap-1 text-[10px] text-slate-500 hover:text-blue-400 font-black uppercase tracking-widest transition-colors"
+                    >
+                      <Share2 className="w-3 h-3" /> Compartir estado
+                    </button>
                   </div>
 
                   {/* Calificación — solo cuando está entregado */}
