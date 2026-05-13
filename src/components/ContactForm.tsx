@@ -41,7 +41,7 @@ export default function ContactForm() {
   };
 
   const handleWhatsApp = () => {
-    const message = `Hola FOL PS! Mi nombre es ${formData.name}. Me gustaría solicitar el servicio de: ${formData.service}. Detalles: ${formData.details}`;
+    const message = `Hola FOL DIGITAL! Mi nombre es ${formData.name}. Me gustaría solicitar el servicio de: ${formData.service}. Detalles: ${formData.details}`;
     const encodedMessage = encodeURIComponent(message);
     window.open(`https://wa.me/50585853867?text=${encodedMessage}`, '_blank');
   };

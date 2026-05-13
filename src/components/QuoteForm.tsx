@@ -12,7 +12,7 @@ export default function QuoteForm() {
   const handleSend = () => {
     if (!form.name || !form.service) return;
     const msg = encodeURIComponent(
-      `Hola FOL PS! Quiero una cotización 📋\n\nNombre: ${form.name}\nContacto: ${form.contact}\nServicio: ${form.service}\nDetalles: ${form.details}`
+      `Hola FOL DIGITAL! Quiero una cotización 📋\n\nNombre: ${form.name}\nContacto: ${form.contact}\nServicio: ${form.service}\nDetalles: ${form.details}`
     );
     window.open(`https://wa.me/50585853867?text=${msg}`, '_blank');
     setSent(true);
@@ -21,12 +21,16 @@ export default function QuoteForm() {
 
   return (
     <>
-      {/* Botón flotante */}
+      {/* Botón flotante más discreto */}
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-6 right-6 z-[400] bg-blue-600 text-white px-5 py-4 rounded-2xl shadow-2xl font-black text-xs uppercase tracking-widest flex items-center gap-2 hover:bg-slate-900 transition-all"
+        className="fixed bottom-6 right-6 z-[400] bg-blue-600 text-white p-4 rounded-full shadow-2xl flex items-center justify-center hover:bg-slate-900 transition-all group"
+        title="Cotización Rápida"
       >
-        <MessageSquare className="w-5 h-5" /> Cotización Rápida
+        <MessageSquare className="w-6 h-6" />
+        <span className="hidden md:block max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 ease-in-out whitespace-nowrap group-hover:ml-2 font-black text-[10px] uppercase tracking-widest">
+          Cotización
+        </span>
       </button>
 
       <AnimatePresence>

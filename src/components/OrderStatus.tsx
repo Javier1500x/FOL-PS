@@ -37,7 +37,7 @@ const STATUS_STEPS = [
   {
     key: 'en_proceso',
     label: 'En Producción',
-    desc: 'El equipo FOL está trabajando en tu pedido.',
+    desc: 'El equipo FOL DIGITAL está trabajando en tu pedido.',
     icon: Clock,
     color: 'bg-orange-500',
   },
@@ -386,7 +386,7 @@ export default function OrderStatus() {
                   )}
 
                   <div className="pt-6 border-t border-white/10 text-center">
-                    <p className="text-slate-500 text-[10px] uppercase tracking-[0.2em] mb-1">Centro de Soporte FOL PS</p>
+                    <p className="text-slate-500 text-[10px] uppercase tracking-[0.2em] mb-1">Centro de Soporte FOL DIGITAL</p>
                     <p className="font-bold text-sm text-slate-300">Si tienes dudas, escríbenos por WhatsApp con tu código.</p>
                   </div>
                 </div>
@@ -411,7 +411,7 @@ export default function OrderStatus() {
                     <p className="text-sm font-bold">Monto: <span className="font-black text-lg">C${order.monto_total}</span></p>
                   </div>
                   <a
-                    href={`https://wa.me/50585853867?text=${encodeURIComponent(`Hola FOL PS! Soy ${order.cliente_nombre}, acabo de realizar el depósito de C$${order.monto_total} por mi pedido (ID: ${order.id}). Adjunto el comprobante.`)}`}
+                    href={`https://wa.me/50585853867?text=${encodeURIComponent(`Hola FOL DIGITAL! Soy ${order.cliente_nombre}, acabo de realizar el depósito de C$${order.monto_total} por mi pedido (ID: ${order.id}). Adjunto el comprobante.`)}`}
                     target="_blank"
                     rel="noreferrer"
                     className="w-full flex items-center justify-center gap-2 bg-white text-blue-700 py-4 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-slate-900 hover:text-white transition-all"

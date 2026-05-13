@@ -52,7 +52,7 @@ export default function TrackOrderPage() {
 
   const steps = [
     { key: 'pendiente', label: 'Recibido', icon: ShieldCheck, desc: 'Tu requerimiento está en cola de procesamiento.' },
-    { key: 'en_proceso', label: 'En Proceso', icon: Zap, desc: 'Estamos trabajando en tu pedido con dedicación.' },
+    { key: 'en_proceso', label: 'En Producción', icon: Zap, desc: 'Estamos trabajando en tu pedido con dedicación.' },
     { key: 'revision', label: 'Calidad', icon: Clock, desc: 'Auditando detalles finales para una entrega perfecta.' },
     { key: 'entregado', label: 'Finalizado', icon: CheckCircle2, desc: '¡Éxito! Tu trabajo está listo para ser descargado.' }
   ];
@@ -78,7 +78,7 @@ export default function TrackOrderPage() {
   return (
     <div className="min-h-screen bg-[#fcfcfc] font-sans pb-20 text-slate-900">
       <nav className="p-10 flex justify-between items-center max-w-7xl mx-auto">
-        <Link href="/" className="text-3xl font-black text-slate-900 tracking-tighter">FOL<span className="text-blue-600 italic">PS</span></Link>
+        <Link href="/" className="text-3xl font-black text-slate-900 tracking-tighter">FOL<span className="text-blue-600 italic"> DIGITAL</span></Link>
         <div className="bg-slate-900 text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl">Realtime HUD Activo</div>
       </nav>
 
@@ -128,7 +128,7 @@ export default function TrackOrderPage() {
            <div className="bg-white p-12 rounded-[3.5rem] shadow-2xl border border-slate-100 flex flex-col items-center text-center justify-center">
               <div className={`w-24 h-24 rounded-full flex items-center justify-center mb-8 ${order.estado === 'entregado' ? 'bg-green-100 text-green-600 animate-bounce' : 'bg-slate-50 text-slate-200'}`}><CheckCircle2 className="w-12 h-12" /></div>
               <p className="font-black text-slate-900 uppercase tracking-tighter text-xl">{order.estado === 'entregado' ? 'Listo para entrega' : 'En producción'}</p>
-              <p className="text-[10px] text-slate-400 mt-4 font-black uppercase tracking-widest">FOL PS Central Sync</p>
+              <p className="text-[10px] text-slate-400 mt-4 font-black uppercase tracking-widest">FOL DIGITAL Central Sync</p>
            </div>
         </div>
 
@@ -154,7 +154,7 @@ export default function TrackOrderPage() {
             </div>
             <p className="text-blue-200 text-xs font-bold mt-4 uppercase tracking-widest">Una vez confirmado el pago, tu archivo aparecerá aquí automáticamente.</p>
             <a
-              href={`https://wa.me/50585853867?text=${encodeURIComponent(`Hola FOL PS! Soy ${order.cliente_nombre}, acabo de realizar el depósito de C$${order.monto_total} por mi pedido (ID: ${order.id}). Adjunto el comprobante.`)}`}
+              href={`https://wa.me/50585853867?text=${encodeURIComponent(`Hola FOL DIGITAL! Soy ${order.cliente_nombre}, acabo de realizar el depósito de C$${order.monto_total} por mi pedido (ID: ${order.id}). Adjunto el comprobante.`)}`}
               target="_blank"
               rel="noreferrer"
               className="mt-6 w-full flex items-center justify-center gap-3 bg-white text-blue-700 py-5 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-slate-900 hover:text-white transition-all shadow-xl"

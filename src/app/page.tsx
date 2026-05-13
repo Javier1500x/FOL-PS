@@ -24,7 +24,7 @@ export default async function Home() {
               <ShieldCheck className="w-10 h-10" />
             </div>
             <h3 className="text-2xl font-black mb-4 text-slate-900 uppercase tracking-tighter">Confiabilidad</h3>
-            <p className="text-slate-600 font-bold leading-relaxed">Trabajos blindados con garantía FOL PS. Entregas puntuales que aseguran tu éxito académico.</p>
+            <p className="text-slate-600 font-bold leading-relaxed">Trabajos blindados con garantía FOL DIGITAL. Entregas puntuales que aseguran tu éxito académico.</p>
           </div>
           <div className="flex flex-col items-center text-center group">
             <div className="w-20 h-20 bg-blue-600 rounded-[2rem] shadow-2xl flex items-center justify-center mb-8 text-white group-hover:scale-110 transition-transform">
@@ -55,7 +55,7 @@ export default async function Home() {
             </h2>
             <p className="text-lg md:text-xl text-slate-400 mb-12 leading-relaxed font-bold">
               Somos Félix, Oscar y Leandro, estudiantes de Sistemas en la UNI. 
-              FOL PS nació para ofrecer servicios digitales y académicos accesibles y profesionales. 
+              FOL DIGITAL nació para ofrecer servicios digitales y académicos accesibles y profesionales. 
               Nuestra visión es convertirnos en una agencia digital y centro académico referente, 
               garantizando entregas limpias y atención rápida.
             </p>
@@ -110,8 +110,8 @@ export default async function Home() {
 
       <footer className="py-12 bg-white border-t border-slate-100">
         <div className="container mx-auto px-6 text-center">
-          <p className="text-2xl font-bold text-slate-900 mb-4 tracking-tighter">FOL-Digital</p>
-          <p className="text-slate-500 mb-8">© 2026 FOL-Digital. Managua, Nicaragua.</p>
+          <p className="text-2xl font-bold text-slate-900 mb-4 tracking-tighter">FOL DIGITAL</p>
+          <p className="text-slate-500 mb-8">© 2026 FOL DIGITAL. Managua, Nicaragua.</p>
           <div className="flex justify-center gap-6">
             <a href="https://www.instagram.com/fol_digital?igsh=dnR4ZnR4ZTZ0ZXVj" target="_blank" rel="noreferrer" className="text-slate-400 hover:text-slate-900 transition-colors">Instagram</a>
             <a href="https://wa.me/50585853867" target="_blank" rel="noreferrer" className="text-slate-400 hover:text-slate-900 transition-colors">WhatsApp</a>

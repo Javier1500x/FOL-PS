@@ -14,7 +14,7 @@ export default function Hero() {
           <div className="relative w-40 h-40 md:w-64 md:h-64 rounded-full overflow-hidden border-4 border-slate-900 shadow-2xl bg-white">
             <img
               src="/logo.png"
-              alt="FOL PS Logo"
+              alt="FOL DIGITAL Logo"
               className="w-full h-full object-contain p-2"
             />
           </div>
@@ -24,7 +24,7 @@ export default function Hero() {
           animate={{ opacity: 1, y: 0 }}
           className="text-5xl md:text-8xl font-black text-slate-900 mb-4 tracking-tighter"
         >
-          FOL <span className="text-blue-600">PS</span>
+          FOL <span className="text-blue-600">DIGITAL</span>
         </motion.h1>
 
         <motion.p
@@ -45,10 +45,10 @@ export default function Hero() {
             Ver Servicios
           </a>
           <a
-            href="#status"
+            href="#contact"
             className="px-10 py-4 border-2 border-slate-900 text-slate-900 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-slate-900 hover:text-white transition-all shadow-md text-center"
           >
-            Rastrear Pedido
+            Hacer Pedido
           </a>
         </motion.div>
       </div>

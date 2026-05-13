@@ -13,13 +13,13 @@ import {
   fetchUrgentOrders,
 } from '@/app/actions';
 import {
-  ShoppingBag, LogOut, Bell, X, Save,
+  ShoppingBag, LogOut, Bell, X, Save, Menu,
   FileText, TrendingUp, Trash2, History, Search, Package, RefreshCw, MessageCircle, Mail, Ban, Upload, Paperclip
 } from 'lucide-react';
 
 const ESTADOS = [
   { value: 'pendiente', label: 'PENDIENTE' },
-  { value: 'en_proceso', label: 'EN PROCESO' },
+  { value: 'en_proceso', label: 'EN PRODUCCIÓN' },
   { value: 'revision', label: 'REVISIÓN' },
   { value: 'entregado', label: 'ENTREGADO' },
 ];
@@ -32,7 +32,7 @@ const PAGO_ESTADOS = [
 
 const STATUS_COLOR: Record<string, string> = {
   pendiente: 'bg-slate-200 text-slate-700',
-  en_proceso: 'bg-orange-100 text-orange-700 border border-orange-300',
+  en_proceso: 'bg-blue-100 text-blue-700 border border-blue-300',
   revision: 'bg-purple-100 text-purple-700 border border-purple-300',
   entregado: 'bg-green-100 text-green-700 border border-green-400',
 };
@@ -61,6 +61,7 @@ export default function AdminDashboard() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const prevOrderIdsRef = useRef<Set<string>>(new Set());
   const alertTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -166,6 +167,14 @@ export default function AdminDashboard() {
     });
 
     if (result.success) {
+      // Notificación automática al cambiar a producción o revisión
+      if (editingOrder.estado === 'en_proceso' || editingOrder.estado === 'revision') {
+        const phone = editingOrder.cliente_contacto.replace(/\D/g, '');
+        const waNumber = phone.length >= 8 ? (phone.startsWith('505') ? phone : `505${phone}`) : '50585853867';
+        const msg = encodeURIComponent(`Hola ${editingOrder.cliente_nombre}! 👋 Tu pedido de ${editingOrder.servicio_id} ya está ${editingOrder.estado === 'en_proceso' ? 'EN PRODUCCIÓN' : 'EN REVISIÓN'}. Te avisaremos cuando esté listo.`);
+        window.open(`https://wa.me/${waNumber}?text=${msg}`, '_blank');
+      }
+
       if (editingOrder.pago_estado === 'liquidado' || editingOrder.estado === 'entregado') {
         await saveToHistory({
           pedido_id: editingOrder.id,
@@ -200,7 +209,7 @@ export default function AdminDashboard() {
       const contacto = result.clienteContacto || '';
       const nombre = result.clienteNombre || editingOrder.cliente_nombre;
       const phone = contacto.replace(/\D/g, '');
-      const msg = encodeURIComponent(`Hola ${nombre}! 🎉 Tu pedido de FOL PS ya está listo. Puedes descargar tu archivo aquí: ${result.url}\n\nCódigo de pedido: ${editingOrder.id}`);
+      const msg = encodeURIComponent(`Hola ${nombre}! 🎉 Tu pedido de FOL DIGITAL ya está listo. Puedes descargar tu archivo aquí: ${result.url}\n\nCódigo de pedido: ${editingOrder.id}`);
       const waNumber = phone.length >= 8 ? (phone.startsWith('505') ? phone : `505${phone}`) : '50585853867';
       window.open(`https://wa.me/${waNumber}?text=${msg}`, '_blank');
     } else {
@@ -211,12 +220,13 @@ export default function AdminDashboard() {
 
   const contactWhatsApp = (order: any) => {
     const phone = order.cliente_contacto.replace(/\D/g, '');
-    const msg = encodeURIComponent(`Hola ${order.cliente_nombre}, te contactamos de FOL PS sobre tu pedido de ${order.servicio_id}.`);
-    window.open(`https://wa.me/${phone || '50585853867'}?text=${msg}`, '_blank');
+    const msg = encodeURIComponent(`Hola ${order.cliente_nombre}, te contactamos de FOL DIGITAL sobre tu pedido de ${order.servicio_id}.`);
+    const waNumber = phone.length >= 8 ? (phone.startsWith('505') ? phone : `505${phone}`) : '50585853867';
+    window.open(`https://wa.me/${waNumber}?text=${msg}`, '_blank');
   };
 
   const contactEmail = (order: any) => {
-    const subject = encodeURIComponent(`Información sobre tu pedido - FOL PS`);
+    const subject = encodeURIComponent(`Información sobre tu pedido - FOL DIGITAL`);
     const body = encodeURIComponent(`Hola ${order.cliente_nombre},\n\nTe contactamos para informarte sobre el avance de tu pedido de ${order.servicio_id}.`);
     window.open(`mailto:${order.cliente_contacto}?subject=${subject}&body=${body}`, '_blank');
   };
@@ -247,7 +257,15 @@ export default function AdminDashboard() {
   if (!currentUser) return null;
 
   return (
-    <div className="flex h-screen bg-[#f8fafc] font-sans text-slate-900 overflow-hidden">
+    <div className="flex h-screen bg-[#f8fafc] font-sans text-slate-900 overflow-hidden relative">
+      {/* Botón para abrir sidebar en móvil */}
+      <button 
+        onClick={() => setIsSidebarOpen(true)}
+        className="lg:hidden fixed bottom-6 left-6 z-[450] bg-slate-900 text-white p-4 rounded-full shadow-2xl"
+      >
+        <Menu className="w-6 h-6" />
+      </button>
+
       {/* Alerta de Pedido Nuevo */}
       {newOrderAlert && (
         <div className="fixed top-5 right-5 z-[500] bg-blue-600 text-white px-8 py-6 rounded-[2rem] shadow-2xl flex items-center gap-4 border-4 border-white max-w-sm" style={{ animation: 'slideInRight 0.5s ease-out, alertPulse 2s infinite' }}>
@@ -264,15 +282,21 @@ export default function AdminDashboard() {
       `}</style>
 
       {/* Sidebar */}
-      <aside className="w-72 bg-slate-900 text-white p-8 flex flex-col shrink-0">
-        <div className="text-4xl font-black mb-12 tracking-tighter italic">FOL<span className="text-blue-500">PS</span></div>
+      <aside className={`
+        fixed inset-y-0 left-0 z-[500] w-72 bg-slate-900 text-white p-8 flex flex-col shrink-0 transition-transform duration-300 lg:relative lg:translate-x-0
+        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+      `}>
+        <div className="flex justify-between items-center mb-12">
+          <div className="text-4xl font-black tracking-tighter italic">FOL<span className="text-blue-500">DIGITAL</span></div>
+          <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden text-slate-500"><X /></button>
+        </div>
         <nav className="flex-1 space-y-3">
           {[
             { id: 'orders', label: 'Operaciones', icon: ShoppingBag },
             { id: 'history', label: 'Historial', icon: History },
             { id: 'finance', label: 'Analítica', icon: TrendingUp },
           ].map(({ id, label, icon: Icon }) => (
-            <button key={id} onClick={() => setActiveTab(id)} className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl transition-all font-black text-xs uppercase tracking-widest ${activeTab === id ? 'bg-white text-slate-900 shadow-xl' : 'text-slate-500 hover:text-white'}`}>
+            <button key={id} onClick={() => { setActiveTab(id); setIsSidebarOpen(false); }} className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl transition-all font-black text-xs uppercase tracking-widest ${activeTab === id ? 'bg-white text-slate-900 shadow-xl' : 'text-slate-500 hover:text-white'}`}>
               <Icon className="w-5 h-5" /> {label}
             </button>
           ))}
@@ -297,16 +321,24 @@ export default function AdminDashboard() {
         </button>
       </aside>
 
-      <main className="flex-1 overflow-y-auto p-10">
-        <header className="flex justify-between items-end mb-12">
-          <div><p className="text-[10px] font-black text-blue-600 uppercase tracking-[0.5em] mb-2">Administración de Ventas</p><h1 className="text-6xl font-black tracking-tighter text-slate-900 uppercase">Dashboard</h1></div>
-          <div className="bg-white p-6 rounded-[2rem] shadow-xl border border-slate-100 text-center"><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Caja Liquidada</p><p className="text-3xl font-black text-slate-900 tracking-tighter">C${finance.total.toFixed(2)}</p></div>
+      {/* Overlay para móvil */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[480] lg:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
+      <main className="flex-1 overflow-y-auto p-4 md:p-10">
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-6">
+          <div><p className="text-[10px] font-black text-blue-600 uppercase tracking-[0.5em] mb-2">Administración de Ventas</p><h1 className="text-4xl md:text-6xl font-black tracking-tighter text-slate-900 uppercase">Dashboard</h1></div>
+          <div className="bg-white p-6 rounded-[2rem] shadow-xl border border-slate-100 text-center w-full md:w-auto"><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Caja Liquidada</p><p className="text-3xl font-black text-slate-900 tracking-tighter">C${finance.total.toFixed(2)}</p></div>
         </header>
 
         {activeTab === 'orders' && (
           <div className="space-y-6">
             <div className="flex flex-wrap gap-3 items-center">
-              <div className="relative flex-1 min-w-[200px]">
+              <div className="relative flex-1 min-w-[280px]">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input type="text" placeholder="Buscar cliente..." className="w-full pl-11 pr-4 py-3 rounded-2xl bg-white border-2 border-slate-100 outline-none focus:border-blue-600 font-bold text-sm" value={searchId} onChange={e => setSearchId(e.target.value)} />
               </div>
@@ -319,8 +351,9 @@ export default function AdminDashboard() {
                 ))}
               </div>
             </div>
-            <div className="bg-white rounded-[3rem] shadow-xl border border-slate-100 overflow-hidden">
-              <table className="w-full text-left">
+            
+            <div className="bg-white rounded-[2rem] md:rounded-[3rem] shadow-xl border border-slate-100 overflow-x-auto">
+              <table className="w-full text-left min-w-[800px]">
                 <thead className="bg-slate-900 text-white">
                   <tr>{['Cliente', 'Contacto', 'Estado', 'Monto', 'Acciones'].map(h => <th key={h} className="px-8 py-6 text-[10px] font-black uppercase tracking-widest">{h}</th>)}</tr>
                 </thead>
@@ -355,9 +388,9 @@ export default function AdminDashboard() {
 
         {activeTab === 'history' && (
           <div className="space-y-6">
-            <div className="flex gap-3 items-center">
-              <div className="relative flex-1"><Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" /><input type="text" placeholder="Buscar en historial..." className="w-full pl-14 pr-6 py-5 rounded-2xl bg-white border-2 border-slate-100 outline-none focus:border-blue-600 font-black" value={searchId} onChange={(e) => setSearchId(e.target.value)} /></div>
-              <button onClick={exportCSV} className="flex items-center gap-2 bg-slate-900 text-white px-6 py-5 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-600 transition-all shrink-0"><Package size={16} /> Exportar CSV</button>
+            <div className="flex flex-col md:flex-row gap-3 items-center">
+              <div className="relative flex-1 w-full"><Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" /><input type="text" placeholder="Buscar en historial..." className="w-full pl-14 pr-6 py-5 rounded-2xl bg-white border-2 border-slate-100 outline-none focus:border-blue-600 font-black" value={searchId} onChange={(e) => setSearchId(e.target.value)} /></div>
+              <button onClick={exportCSV} className="w-full md:w-auto flex items-center justify-center gap-2 bg-slate-900 text-white px-6 py-5 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-600 transition-all shrink-0"><Package size={16} /> Exportar CSV</button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {history.filter(h => (h.cliente_nombre || '').toLowerCase().includes(searchId.toLowerCase()) || (h.servicio_id || '').toLowerCase().includes(searchId.toLowerCase())).map((h) => (
@@ -380,44 +413,44 @@ export default function AdminDashboard() {
         {activeTab === 'finance' && (
           <div className="space-y-8">
             {/* Resumen financiero */}
-            <div className="bg-slate-900 p-12 rounded-[3rem] shadow-2xl text-white relative overflow-hidden">
+            <div className="bg-slate-900 p-8 md:p-12 rounded-[2rem] md:rounded-[3rem] shadow-2xl text-white relative overflow-hidden">
               <TrendingUp className="absolute top-0 right-0 w-[300px] h-[300px] opacity-5 rotate-12" />
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-8 relative z-10">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 relative z-10">
                 {[
                   { label: 'Total Liquidado', val: finance.total },
                   { label: 'Empresa (60%)', val: finance.empresa },
                   { label: 'Productores (30%)', val: finance.productores },
                   { label: 'Vendedores (10%)', val: finance.vendedores },
                 ].map(({ label, val }) => (
-                  <div key={label}><p className="text-blue-400 font-black uppercase tracking-widest text-[10px] mb-2">{label}</p><h4 className="text-4xl font-black tracking-tighter">C${val.toFixed(2)}</h4></div>
+                  <div key={label}><p className="text-blue-400 font-black uppercase tracking-widest text-[10px] mb-2">{label}</p><h4 className="text-3xl md:text-4xl font-black tracking-tighter">C${val.toFixed(2)}</h4></div>
                 ))}
               </div>
             </div>
             {/* Stats generales */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
               {[
                 { label: 'Total Pedidos', val: orders.length },
                 { label: 'Entregados', val: orders.filter(o => o.estado === 'entregado').length },
                 { label: 'En Proceso', val: orders.filter(o => o.estado === 'en_proceso').length },
                 { label: 'Promedio C$', val: orders.length ? (orders.reduce((a, o) => a + Number(o.monto_total || 0), 0) / orders.length).toFixed(0) : 0 },
               ].map(({ label, val }) => (
-                <div key={label} className="bg-white p-8 rounded-[2rem] shadow-xl border border-slate-100 text-center">
+                <div key={label} className="bg-white p-6 md:p-8 rounded-[2rem] shadow-xl border border-slate-100 text-center">
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{label}</p>
-                  <p className="text-4xl font-black tracking-tighter text-slate-900">{val}</p>
+                  <p className="text-3xl md:text-4xl font-black tracking-tighter text-slate-900">{val}</p>
                 </div>
               ))}
             </div>
             {/* Pedidos por servicio */}
-            <div className="bg-white p-10 rounded-[2rem] shadow-xl border border-slate-100">
+            <div className="bg-white p-6 md:p-10 rounded-[2rem] shadow-xl border border-slate-100">
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">Pedidos por Servicio</p>
               <div className="space-y-3">
                 {Object.entries(
                   orders.reduce((acc: Record<string, number>, o) => { acc[o.servicio_id] = (acc[o.servicio_id] || 0) + 1; return acc; }, {})
                 ).sort((a, b) => b[1] - a[1]).map(([svc, count]) => (
                   <div key={svc} className="flex items-center gap-4">
-                    <p className="text-sm font-black uppercase w-40 shrink-0 truncate">{svc}</p>
-                    <div className="flex-1 bg-slate-100 rounded-full h-3 overflow-hidden">
-                      <div className="bg-blue-600 h-3 rounded-full transition-all" style={{ width: `${(count / orders.length) * 100}%` }} />
+                    <p className="text-sm font-black uppercase w-32 md:w-40 shrink-0 truncate">{svc}</p>
+                    <div className="flex-1 bg-slate-100 rounded-full h-2 md:h-3 overflow-hidden">
+                      <div className="bg-blue-600 h-full rounded-full transition-all" style={{ width: `${(count / orders.length) * 100}%` }} />
                     </div>
                     <p className="text-sm font-black w-6 text-right">{count}</p>
                   </div>
@@ -430,19 +463,19 @@ export default function AdminDashboard() {
 
       {/* MODAL EDICIÓN */}
       {editingOrder && (
-        <div className="fixed inset-0 z-[600] flex items-center justify-center p-6 bg-slate-900/80 backdrop-blur-xl">
-          <div className="bg-white w-full max-w-3xl rounded-[3rem] shadow-2xl overflow-hidden flex flex-col md:flex-row">
-            <div className="md:w-72 bg-slate-50 p-10 border-r border-slate-100"><h3 className="text-2xl font-black uppercase italic mb-8 tracking-tighter">Expediente</h3><div className="space-y-6"><div className="flex items-center gap-4"><Avatar name={editingOrder.cliente_nombre} /><div><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Cliente</label><p className="text-xl font-black uppercase">{editingOrder.cliente_nombre}</p></div></div><div className="bg-white p-5 rounded-2xl border border-slate-100"><p className="text-xs font-bold text-slate-500 italic">&quot;{editingOrder.detalles}&quot;</p></div></div></div>
-            <div className="flex-1 p-12"><div className="flex justify-between items-center mb-10"><h3 className="text-3xl font-black uppercase underline decoration-blue-600 decoration-4 underline-offset-8">Ajustes</h3><button onClick={() => setEditingOrder(null)}><X /></button></div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-                <div><label className="text-xs font-black uppercase tracking-widest mb-2 block">Monto (C$)</label><input type="number" className="w-full px-6 py-4 rounded-2xl bg-slate-50 font-black text-3xl" value={editingOrder.monto_total || 0} onChange={(e) => setEditingOrder({ ...editingOrder, monto_total: e.target.value })} /></div>
-                <div><label className="text-xs font-black uppercase tracking-widest mb-2 block">Estado Pedido</label><select className="w-full px-6 py-4 rounded-2xl bg-slate-50 font-black uppercase" value={editingOrder.estado} onChange={(e) => setEditingOrder({ ...editingOrder, estado: e.target.value })}>{ESTADOS.map(e => <option key={e.value} value={e.value}>{e.label}</option>)}</select></div>
-                <div><label className="text-xs font-black uppercase tracking-widest mb-2 block">Estado Pago</label><select className="w-full px-6 py-4 rounded-2xl bg-slate-50 font-black uppercase" value={editingOrder.pago_estado} onChange={(e) => setEditingOrder({ ...editingOrder, pago_estado: e.target.value })}>{PAGO_ESTADOS.map(e => <option key={e.value} value={e.value}>{e.label}</option>)}</select></div>
-                <div><label className="text-xs font-black uppercase tracking-widest mb-2 block">Staff</label><div className="flex gap-2"><input placeholder="Vendedor" className="w-1/2 p-4 rounded-xl bg-slate-50" value={editingOrder.vendedor || ''} onChange={(e) => setEditingOrder({ ...editingOrder, vendedor: e.target.value })} /><input placeholder="Productor" className="w-1/2 p-4 rounded-xl bg-slate-50" value={editingOrder.productor || ''} onChange={(e) => setEditingOrder({ ...editingOrder, productor: e.target.value })} /></div></div>
-                <div><label className="text-xs font-black uppercase tracking-widest mb-2 block">Fecha Límite</label><input type="date" className="w-full px-6 py-4 rounded-2xl bg-slate-50 font-black" value={editingOrder.deadline || ''} onChange={(e) => setEditingOrder({ ...editingOrder, deadline: e.target.value })} /></div>
+        <div className="fixed inset-0 z-[600] flex items-center justify-center p-4 md:p-6 bg-slate-900/80 backdrop-blur-xl">
+          <div className="bg-white w-full max-w-4xl rounded-[2rem] md:rounded-[3rem] shadow-2xl overflow-hidden flex flex-col md:flex-row max-h-[90vh] overflow-y-auto">
+            <div className="md:w-72 bg-slate-50 p-8 md:p-10 border-b md:border-b-0 md:border-r border-slate-100"><h3 className="text-2xl font-black uppercase italic mb-8 tracking-tighter">Expediente</h3><div className="space-y-6"><div className="flex items-center gap-4"><Avatar name={editingOrder.cliente_nombre} /><div><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Cliente</label><p className="text-xl font-black uppercase">{editingOrder.cliente_nombre}</p></div></div><div className="bg-white p-5 rounded-2xl border border-slate-100"><p className="text-xs font-bold text-slate-500 italic">&quot;{editingOrder.detalles}&quot;</p></div></div></div>
+            <div className="flex-1 p-8 md:p-12"><div className="flex justify-between items-center mb-8 md:mb-10"><h3 className="text-2xl md:text-3xl font-black uppercase underline decoration-blue-600 decoration-4 underline-offset-8">Ajustes</h3><button onClick={() => setEditingOrder(null)}><X /></button></div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-8 md:mb-10">
+                <div><label className="text-xs font-black uppercase tracking-widest mb-2 block">Monto (C$)</label><input type="number" className="w-full px-6 py-4 rounded-2xl bg-slate-50 font-black text-2xl md:text-3xl" value={editingOrder.monto_total || 0} onChange={(e) => setEditingOrder({ ...editingOrder, monto_total: e.target.value })} /></div>
+                <div><label className="text-xs font-black uppercase tracking-widest mb-2 block">Estado Pedido</label><select className="w-full px-6 py-4 rounded-2xl bg-slate-50 font-black uppercase text-sm md:text-base" value={editingOrder.estado} onChange={(e) => setEditingOrder({ ...editingOrder, estado: e.target.value })}>{ESTADOS.map(e => <option key={e.value} value={e.value}>{e.label}</option>)}</select></div>
+                <div><label className="text-xs font-black uppercase tracking-widest mb-2 block">Estado Pago</label><select className="w-full px-6 py-4 rounded-2xl bg-slate-50 font-black uppercase text-sm md:text-base" value={editingOrder.pago_estado} onChange={(e) => setEditingOrder({ ...editingOrder, pago_estado: e.target.value })}>{PAGO_ESTADOS.map(e => <option key={e.value} value={e.value}>{e.label}</option>)}</select></div>
+                <div><label className="text-xs font-black uppercase tracking-widest mb-2 block">Staff</label><div className="flex gap-2"><input placeholder="Vendedor" className="w-1/2 p-4 rounded-xl bg-slate-50 text-sm" value={editingOrder.vendedor || ''} onChange={(e) => setEditingOrder({ ...editingOrder, vendedor: e.target.value })} /><input placeholder="Productor" className="w-1/2 p-4 rounded-xl bg-slate-50 text-sm" value={editingOrder.productor || ''} onChange={(e) => setEditingOrder({ ...editingOrder, productor: e.target.value })} /></div></div>
+                <div><label className="text-xs font-black uppercase tracking-widest mb-2 block">Fecha Límite</label><input type="date" className="w-full px-6 py-4 rounded-2xl bg-slate-50 font-black text-sm" value={editingOrder.deadline || ''} onChange={(e) => setEditingOrder({ ...editingOrder, deadline: e.target.value })} /></div>
               </div>
               <div className="mb-6"><label className="text-xs font-black uppercase tracking-widest mb-2 block">Notas Internas (solo admin)</label><textarea rows={2} placeholder="Notas privadas del equipo..." className="w-full px-6 py-4 rounded-2xl bg-slate-50 font-bold text-sm resize-none" value={editingOrder.notas_internas || ''} onChange={(e) => setEditingOrder({ ...editingOrder, notas_internas: e.target.value })} /></div>
-              <button onClick={handleUpdateOrder} disabled={saving} className="w-full bg-slate-900 text-white py-6 rounded-[2rem] font-black uppercase shadow-xl hover:bg-blue-600 transition-all">{saving ? 'Guardando...' : 'Sincronizar'}</button>
+              <button onClick={handleUpdateOrder} disabled={saving} className="w-full bg-slate-900 text-white py-5 md:py-6 rounded-[2rem] font-black uppercase shadow-xl hover:bg-blue-600 transition-all text-sm md:text-base">{saving ? 'Guardando...' : 'Sincronizar'}</button>
 
               {/* Subir archivo de entrega */}
               <div className="mt-6 border-t border-slate-100 pt-6">
@@ -466,20 +499,20 @@ export default function AdminDashboard() {
 
       {/* MODAL FACTURA */}
       {invoiceOrder && (
-        <div className="fixed inset-0 z-[700] bg-white p-16 flex flex-col items-center overflow-y-auto no-print">
-          <div className="max-w-3xl w-full p-16 border-[20px] border-slate-50 rounded-[5rem] relative">
-            <button onClick={() => setInvoiceOrder(null)} className="absolute top-8 right-8 text-slate-300 hover:text-slate-900"><X size={40} /></button>
-            <h4 className="text-5xl font-black mb-2 italic">FOL<span className="text-blue-600">PS</span></h4>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.5em] mb-16">Comprobante de Pago</p>
-            <div className="grid grid-cols-2 gap-16 mb-16">
-              <div><p className="text-xs font-black text-slate-400 uppercase mb-2">Cliente</p><p className="text-2xl font-black uppercase">{invoiceOrder.cliente_nombre}</p></div>
-              <div className="text-right"><p className="text-xs font-black text-slate-400 uppercase mb-2">Fecha</p><p className="text-2xl font-black">{new Date(invoiceOrder.fecha_emision).toLocaleDateString()}</p></div>
+        <div className="fixed inset-0 z-[700] bg-white p-8 md:p-16 flex flex-col items-center overflow-y-auto no-print">
+          <div className="max-w-3xl w-full p-8 md:p-16 border-[10px] md:border-[20px] border-slate-50 rounded-[3rem] md:rounded-[5rem] relative">
+            <button onClick={() => setInvoiceOrder(null)} className="absolute top-8 right-8 text-slate-300 hover:text-slate-900"><X size={30} /></button>
+            <h4 className="text-3xl md:text-5xl font-black mb-2 italic">FOL<span className="text-blue-600">DIGITAL</span></h4>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.5em] mb-12 md:mb-16">Comprobante de Pago</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 mb-12 md:mb-16">
+              <div><p className="text-xs font-black text-slate-400 uppercase mb-2">Cliente</p><p className="text-xl md:text-2xl font-black uppercase">{invoiceOrder.cliente_nombre}</p></div>
+              <div className="md:text-right"><p className="text-xs font-black text-slate-400 uppercase mb-2">Fecha</p><p className="text-xl md:text-2xl font-black">{new Date(invoiceOrder.fecha_emision).toLocaleDateString()}</p></div>
             </div>
-            <div className="border-y-4 border-slate-900 py-12 mb-16 flex justify-between items-center">
-              <div><p className="text-blue-600 font-black text-sm uppercase mb-2">{invoiceOrder.servicio_id}</p><p className="text-lg font-bold text-slate-400 italic">ID: {invoiceOrder.pedido_id}</p></div>
-              <p className="text-5xl font-black">C${invoiceOrder.monto_total}</p>
+            <div className="border-y-2 md:border-y-4 border-slate-900 py-8 md:py-12 mb-12 md:mb-16 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <div><p className="text-blue-600 font-black text-sm uppercase mb-2">{invoiceOrder.servicio_id}</p><p className="text-sm font-bold text-slate-400 italic">ID: {invoiceOrder.pedido_id}</p></div>
+              <p className="text-4xl md:text-5xl font-black">C${invoiceOrder.monto_total}</p>
             </div>
-            <button onClick={() => window.print()} className="w-full bg-blue-600 text-white py-8 rounded-[3rem] font-black uppercase shadow-xl hover:bg-slate-900 transition-all">Imprimir</button>
+            <button onClick={() => window.print()} className="w-full bg-blue-600 text-white py-6 md:py-8 rounded-[2rem] md:rounded-[3rem] font-black uppercase shadow-xl hover:bg-slate-900 transition-all text-sm md:text-base">Imprimir</button>
           </div>
         </div>
       )}

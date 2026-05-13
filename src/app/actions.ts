@@ -11,7 +11,7 @@ async function sendEmail(to: string, subject: string, html: string) {
   // Solo enviar si parece un email válido
   if (!to.includes('@')) return;
   try {
-    await resend.emails.send({ from: 'FOL PS <onboarding@resend.dev>', to: [to], subject, html });
+    await resend.emails.send({ from: 'FOL DIGITAL <onboarding@resend.dev>', to: [to], subject, html });
   } catch (e) {
     console.error('[sendEmail] Error:', e);
   }
@@ -41,13 +41,13 @@ export async function submitOrder(formData: {
     if (error) throw error;
 
     // Email al admin
-    await sendEmail('foldigital17@gmail.com', `Nuevo Pedido: ${formData.service} - ${formData.name}`,
-      `<h2>Nuevo Pedido</h2><p><b>ID:</b> ${data.id}</p><p><b>Cliente:</b> ${formData.name}</p><p><b>Contacto:</b> ${formData.contact}</p><p><b>Servicio:</b> ${formData.service}</p><p><b>Detalles:</b> ${formData.details}</p>`
+    await sendEmail('felixfloresdragon15@gmail.com', `Nuevo Pedido: ${formData.service} - ${formData.name}`,
+      `<h2>Nuevo Pedido en FOL DIGITAL</h2><p><b>ID:</b> ${data.id}</p><p><b>Cliente:</b> ${formData.name}</p><p><b>Contacto:</b> ${formData.contact}</p><p><b>Servicio:</b> ${formData.service}</p><p><b>Detalles:</b> ${formData.details}</p>`
     );
 
     // Email de confirmación al cliente (si puso correo)
-    await sendEmail(formData.contact, '✅ Pedido confirmado — FOL PS',
-      `<h2>¡Hola ${formData.name}!</h2><p>Tu pedido fue recibido con éxito.</p><p><b>Código de rastreo:</b> <code>${data.id}</code></p><p>Puedes rastrear tu pedido en: <a href="https://fol-ps.netlify.app/#status">fol-ps.netlify.app</a></p><p>Te avisaremos cuando haya novedades.</p><br><p>— Equipo FOL PS</p>`
+    await sendEmail(formData.contact, '✅ Pedido confirmado — FOL DIGITAL',
+      `<h2>¡Hola ${formData.name}!</h2><p>Tu pedido fue recibido con éxito.</p><p><b>Código de rastreo:</b> <code>${data.id}</code></p><p>Puedes rastrear tu pedido en: <a href="https://fol-digital.com">fol-digital.com</a></p><p>Te avisaremos cuando haya novedades.</p><br><p>— Equipo FOL DIGITAL</p>`
     );
 
     return { success: true, orderId: data.id };
@@ -192,8 +192,8 @@ export async function uploadOrderFile(orderId: string, formData: FormData) {
     if (updateError) throw updateError;
 
     // Email al cliente con link de descarga
-    await sendEmail(order?.cliente_contacto || '', '🎉 Tu entrega está lista — FOL PS',
-      `<h2>¡Hola ${order?.cliente_nombre}!</h2><p>Tu pedido está listo para descargar.</p><p><a href="${urlData.publicUrl}" style="background:#16a34a;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;">Descargar Archivo</a></p><p>También puedes verlo en: <a href="https://fol-ps.netlify.app/#status">fol-ps.netlify.app</a></p><p>Código: <code>${orderId}</code></p><br><p>— Equipo FOL PS</p>`
+    await sendEmail(order?.cliente_contacto || '', '🎉 Tu entrega está lista — FOL DIGITAL',
+      `<h2>¡Hola ${order?.cliente_nombre}!</h2><p>Tu pedido está listo para descargar.</p><p><a href="${urlData.publicUrl}" style="background:#16a34a;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;">Descargar Archivo</a></p><p>También puedes verlo en: <a href="https://fol-digital.com">fol-digital.com</a></p><p>Código: <code>${orderId}</code></p><br><p>— Equipo FOL DIGITAL</p>`
     );
 
     return {

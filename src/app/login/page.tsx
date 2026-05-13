@@ -38,8 +38,8 @@ export default function LoginPage() {
           <div className="w-16 h-16 bg-slate-900 rounded-2xl flex items-center justify-center text-white mb-4">
             <Lock className="w-8 h-8" />
           </div>
-          <h1 className="text-2xl font-bold text-slate-900">FOL PS Admin</h1>
-          <p className="text-slate-500 text-sm italic">Acceso restringido a socios</p>
+          <h1 className="text-2xl font-bold text-slate-900">FOL DIGITAL Admin</h1>
+          <p className="text-slate-500 text-sm italic">Acceso restringido</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6">
